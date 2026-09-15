@@ -26,3 +26,6 @@ Interpretations are authored symbolic prompts and deterministic combinations, no
 
 ## Next release decisions
 Review shuffle/pick feel on phone and desktop; refine artwork/style and interpretation voice; confirm brand/domain before public SEO launch. Payment, advertising, analytics and the general-tarot twin site remain future work.
+
+## Full-deck and Korean update
+All 78 cards are rendered together. Wide screens fit the full deck; below 1200px, a horizontally scrollable three-row deck preserves card size. Arrow controls, native touch panning and mouse dragging are supported, with movement-threshold click suppression. Clarity and Message decks also show their complete card counts. Add `?lang=ko` for Korean; the reading language switch preserves chosen cards. Korean names, both orientations, reading contexts, oracle text, card-meaning pages and supporting pages are included. TypeScript/data checks and production build verified; browser/device gesture QA remains pending.
