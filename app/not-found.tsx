@@ -1,0 +1,1 @@
+import {Header,Footer} from '@/components/site-shell';export default function NotFound(){return <><Header/><main className="article"><h1>This card isn’t on the table.</h1><p>That page could not be found.</p><a href="/">Return to your reading →</a></main><Footer/></>}
