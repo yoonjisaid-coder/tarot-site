@@ -21,3 +21,16 @@
 @media(min-width:1600px){.full-deck{grid-template-columns:repeat(26,minmax(0,1fr));gap:10px}}
 @media(max-width:900px){.full-deck{grid-template-columns:repeat(10,minmax(0,1fr));gap:9px}.reading-table{padding:25px 20px}}
 @media(max-width:600px){.full-deck{grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;padding:20px 0 24px}.reading-table{padding:24px 12px;border-radius:22px}.reading-table:before{border-radius:15px}.reading-table h2{padding-inline:4px}.reading-table-top{padding:0 3px;gap:10px}.selection-order{font-size:23px}}
+.deck-board{width:100%;min-width:0;margin:12px 0 18px}
+.deck-navigation{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--gold)}
+.deck-navigation p{font-size:13px;color:var(--muted);margin:0}
+.deck-navigation button{border:1px solid #846251;width:44px;height:44px;flex-shrink:0}
+.deck-scroll{overflow:auto;max-width:100%;overscroll-behavior-x:contain;touch-action:pan-x pan-y;scrollbar-color:#b18c67 #301924;scrollbar-width:thin;cursor:grab;user-select:none}
+.deck-scroll:active{cursor:grabbing}
+.deck-scroll .full-deck{grid-template-columns:repeat(26,minmax(0,1fr));gap:9px;min-width:0;padding:18px 5px 24px}
+.deck-scroll .deck-choice{touch-action:pan-x pan-y;cursor:inherit}
+.deck-scroll .oracle-grid{grid-template-columns:repeat(12,minmax(0,1fr))}
+.language-switch{display:flex;gap:8px;font-size:13px;align-items:center}.language-switch button{background:none;border:0;color:var(--muted);padding:5px}.language-switch button[aria-pressed=true]{color:var(--gold);text-decoration:underline;text-underline-offset:5px}
+html[lang=ko] h1,html[lang=ko] h2,html[lang=ko] h3{word-break:keep-all}
+@media(max-width:1199px){.deck-scroll .full-deck{width:1870px;min-width:1870px;grid-template-columns:repeat(26,62px);gap:9px}.deck-scroll .oracle-grid{width:850px;min-width:850px;grid-template-columns:repeat(12,62px)}.deck-scroll{max-height:430px}}
+@media(max-width:700px){header{flex-wrap:wrap;gap:8px 16px}header nav{order:3;width:100%;justify-content:center;margin-top:8px}.deck-navigation p{font-size:12px;max-width:210px}.deck-scroll .full-deck{padding-top:15px;padding-bottom:22px}.room-heading h1{font-size:32px}.reading-table h2{font-size:24px}}
