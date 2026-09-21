@@ -29,3 +29,15 @@ Review shuffle/pick feel on phone and desktop; refine artwork/style and interpre
 
 ## Full-deck and Korean update
 All 78 cards are rendered together. Wide screens fit the full deck; below 1200px, a horizontally scrollable three-row deck preserves card size. Arrow controls, native touch panning and mouse dragging are supported, with movement-threshold click suppression. Clarity and Message decks also show their complete card counts. Add `?lang=ko` for Korean; the reading language switch preserves chosen cards. Korean names, both orientations, reading contexts, oracle text, card-meaning pages and supporting pages are included. TypeScript/data checks and production build verified; browser/device gesture QA remains pending.
+
+## Situation-based reading update
+- Four situations and 21 focused relationship questions, preserving legacy reading URLs.
+- One continuous 78-card semicircular fan; ResizeObserver switches narrow surfaces to bounded rotation via arrows, pointer dragging, or keyboard focus.
+- All three decks shuffle before picking and allow reshuffling before selection.
+- Korean interpretations combine card identity/orientation, question, position, concrete card scenes and practical observations. Matrix validation covers 10,608 combinations, each with 569–753 Korean characters, including question-specific interpretation lenses.
+- Card meanings use the existing accessible Dialog primitive in both reading results and the 78-card catalogue; opening details does not navigate away.
+- Fortune cookies present six pre-shuffled, distinct choices and retain the selected daily message locally.
+- Updated Untold copy; heart/moon UI decorations removed (historical card artwork remains intact).
+- Browser checks: full-deck spread and mouse picks; 78 → 12 → 30 deck flow; secondary reshuffles; result modal open/close preserved chosen cards; six-cookie selection.
+
+Latest QA: desktop DOM hit testing found exposed selectable regions for all 78 cards. At a 390px embedded viewport, both end cards were pointer-selected after arrow rotation; dragging changed the rotation without adding a selection. Real-device touch behavior remains unverified. Production builds exclude the temporary QA page.
