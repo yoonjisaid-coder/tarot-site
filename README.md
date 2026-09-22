@@ -41,3 +41,12 @@ All 78 cards are rendered together. Wide screens fit the full deck; below 1200px
 - Browser checks: full-deck spread and mouse picks; 78 → 12 → 30 deck flow; secondary reshuffles; result modal open/close preserved chosen cards; six-cookie selection.
 
 Latest QA: desktop DOM hit testing found exposed selectable regions for all 78 cards. At a 390px embedded viewport, both end cards were pointer-selected after arrow rotation; dragging changed the rotation without adding a selection. Real-device touch behavior remains unverified. Production builds exclude the temporary QA page.
+
+## Question-first copy and cookie alignment
+- Scoped cookie flex alignment prevents shared reading-table styles from left-aligning the result block. Korean wrapping keeps words together where space permits.
+- Rewrote 24 question interpretation lenses and the selection/result instructions in plain Korean. Removed repeated suit and generic position paragraphs; the earlier character-count figures above describe the previous version, not a quality target for this one.
+- Separated 30 daily cookie notes from 30 relationship closing messages; existing saved cookie indices remain valid.
+- User-supplied reference: Tight Saju's problem-specific entry pages. Competitor prices, traffic and claims have not been independently verified in this update.
+- Apply now: question-first entry labels and concrete interpretations. Keep the current love/reunion scope and existing free flow.
+- Future decisions, not implemented: free-to-deeper paid reports, career/money variants, and original card-by-intent SEO articles. Reuse the engine with genuinely topic-specific meanings, not renamed spreads. Past/present/future must not be labeled a three-month forecast.
+- Do not add fabricated activity counts, testimonials, scarcity or guaranteed relationship/investment outcomes.

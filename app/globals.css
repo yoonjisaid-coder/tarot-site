@@ -41,4 +41,9 @@ html[lang=ko] h1,html[lang=ko] h2,html[lang=ko] h3{word-break:keep-all}
 .reading-options{text-align:center;margin:12px auto}.arc-controls button:disabled{visibility:hidden}
 
 .detail-close{position:absolute;top:12px;right:12px;display:grid;place-items:center;width:44px;height:44px;color:var(--gold)}
+.room.cookie-room{max-width:1000px;margin-inline:auto}
+.reading-table.cookie-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-width:0;padding:clamp(24px,5vw,64px)}
+.cookie-panel .message-text{width:100%;max-width:640px;margin-inline:auto;font-size:clamp(24px,3.5vw,32px);line-height:1.65;text-wrap:balance}
+.cookie-panel>p,.cookie-panel>a{max-width:100%;margin-inline:auto}
+[lang=ko] :is(h1,h2,h3,h4,p,a,button){word-break:keep-all;overflow-wrap:anywhere}
 @media(prefers-reduced-motion:reduce){.arc-card,.cookie-choice{transition:none}.fan.shuffling .pick-card,.oracle-reveal{animation:none}}
