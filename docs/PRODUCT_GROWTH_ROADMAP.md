@@ -162,3 +162,66 @@ Add saju/ilju searchable content and tools only with a validated calculation/con
 From problem-specific fortune/tarot products: use concrete user-problem entry points, free searchable education, and a visible step from free value to deeper paid value.
 
 Do not copy competitor claims, copy, artwork, prices, or unverified accuracy claims. “Past verification” may be explored later as a reflective interaction only if supported by the actual system; never present generated statements as proof of predictive accuracy.
+
+
+## Project-change precedence (mandatory)
+
+Before applying any new shared operating method, competitor lesson, growth tactic or implementation pattern:
+1. Read the latest project Source of Truth and current implementation.
+2. Separate confirmed/current decisions from deferred and discarded ideas.
+3. Check the proposed change for conflicts.
+4. Preserve confirmed project decisions when a conflict exists; do not silently redesign or overwrite them.
+5. Absorb shared operating methods only where they strengthen the existing direction.
+6. Record only verified changes back into the Source of Truth.
+
+The current Untold love/relationship MVP remains the active product scope. Adjacent fortune verticals remain staged expansions unless explicitly promoted by a later confirmed decision.
+
+## Reading voice: direct, concrete, plain-language
+
+Untold should not sound mystical merely for atmosphere. Interpretation copy must answer the user's question quickly and plainly.
+
+Use this result order:
+- **Answer first:** what the cards point to.
+- **Timing/status next:** fast/slow, near-term/later, and a bounded time window when the reading is specifically about timing.
+- **Why:** the concrete card symbols/patterns behind that reading.
+- **Variable:** what could accelerate, delay or change the situation.
+- **Action/reflection:** one practical next point when useful.
+
+Avoid vague filler such as “에너지가 열려 있어요”, “우주의 흐름을 믿어보세요”, “가능성이 느껴져요” when a clearer sentence can be written. Prefer language such as “연락 가능성은 낮지 않습니다. 다만 바로 움직이는 카드보다 지연을 뜻하는 카드가 강해서, 이번 주보다 2~6주 안쪽으로 읽는 편이 자연스럽습니다.”
+
+Do not convert symbolic readings into factual certainty. Use clear uncertainty markers only where needed: “카드상”, “이 리딩에서는”, “~로 읽힙니다/보입니다”. Do not bury every sentence in disclaimers.
+
+## Timing readings (add within the existing love-tarot product)
+
+Timing is a first-class relationship question, not a separate product/project.
+
+Initial timing intents:
+- 연락은 언제 올까?
+- 재회 흐름이 움직이는 시기는 언제일까?
+- 새로운 연애는 언제 시작될까?
+- 관계가 진전되는 시기는 언제일까?
+
+Timing output must use ranges rather than exact guaranteed dates. The engine may combine card number, suit/element, Major Arcana, orientation and the question context into a deterministic timing band. Define and test the correspondence table before publishing timing claims.
+
+Free timing reading should itself be useful. A simple reading can return:
+1. speed: 빠름 / 보통 / 지연,
+2. strongest window: e.g. 며칠, 1–3주, 2–6주, 1–3개월, 3개월 이후,
+3. reason from the selected card,
+4. delay/acceleration variable.
+
+A deeper multi-card reading may add: current pace → delay/acceleration factor → strongest timing window. Paid depth may later combine timing with the wider relationship flow, but the basic timing answer must not be paywalled into uselessness.
+
+Timing copy must never say that a contact, reunion or relationship **will** occur on a guaranteed date. If the spread does not support the event itself, do not manufacture a date; state that timing is not meaningfully readable until the event possibility is established in that reading.
+
+## Full-deck visibility UX (R0 change)
+
+The current narrow-screen rotating semicircular fan hides much of the 78-card deck at once. Keep the core interaction — shuffle → see the face-down deck → personally choose cards — but change the presentation so users can visually understand the whole deck without horizontal/rotational exploration as the default.
+
+Requirements:
+- Desktop: all 78 face-down cards visible within the deck-selection area at once; no horizontal scrolling or arrow rotation required. Test a compact grid/table layout (13×6 is a natural starting point) and retain clear hover/focus/selected feedback.
+- Mobile: show the whole 78-card field as the default composition rather than hiding cards offscreen horizontally. Card hit targets, accidental taps and legibility must be tested on real/narrow devices; use responsive spacing/scale and selection feedback rather than returning to a hidden horizontal carousel.
+- Preserve shuffle, unique selection, selection order, keyboard operation and reduced-motion/accessibility behavior.
+- Do not shrink cards so far that selection becomes unreliable. Browser/device QC decides the final responsive dimensions.
+- The 12-card Clarity and 30-card Message decks should follow the same “whole deck is understandable at a glance” principle where practical.
+
+This is an R0 UX correction and takes precedence over preserving the existing rotating-fan presentation itself; the confirmed product interaction is manual card choice, not the fan geometry.
