@@ -1,3 +1,5 @@
+import {timingQuestions,isTiming,timingReading} from './timing';
+import {cardScene} from './card-scenes';
 import {questionLens} from './question-lenses';
 import {questions,type Draw} from './tarot';
 import {koQuestions} from './tarot-ko';
@@ -51,18 +53,38 @@ const englishPositions:Record<string,string[]>={
 'healthy-love':['The connection you need','Practical conditions for ease','A standard to keep']};
 
 export type Scenario={id:string;situation:string;label:string;title:string;positions:string[];focus:string;prompt:string;count:number};
-export function scenarioList(ko:boolean):Scenario[]{return rows.map(r=>({id:r[1],situation:r[0],label:ko?r[2]:r[3],title:ko?r[2]:r[3],positions:ko?r[4].split('|'):(englishPositions[r[1]]??['The underlying connection','What needs understanding','Your next step']),focus:ko?r[5]:`For “${r[3]}”, distinguish emotional possibility from what both people are actually choosing.`,prompt:ko?r[6]:'Choose one small step that respects your needs and leaves room for an honest response.',count:3}))}
+export function scenarioList(ko:boolean):Scenario[]{return rows.map(r=>({id:r[1],situation:r[0],label:ko?r[2]:r[3],title:ko?r[2]:r[3],positions:ko?r[4].split('|'):(englishPositions[r[1]]??['The underlying connection','What needs understanding','Your next step']),focus:ko?r[5]:`For “${r[3]}”, distinguish emotional possibility from what both people are actually choosing.`,prompt:ko?r[6]:'Choose one small step that respects your needs and leaves room for an honest response.',count:3})).concat(timingQuestions.map(q=>({id:q.id,situation:q.situation,label:ko?q.ko:q.en,title:ko?q.ko:q.en,positions:[ko?'시기를 읽는 카드':'Your timing card'],focus:ko?'시기 카드 1장으로 속도와 기간대, 변수를 살펴봐요.':'One card for pace, a symbolic time window and the conditions that matter.',prompt:ko?q.actionKo:'Check mutual willingness and respect boundaries.',count:1})))}
 export const aliases:Record<string,string>={'their-feelings':'crush-feelings','my-ex':'ex-misses-me','reconciliation':'repair','will-they-contact-me':'ex-contact','our-future':'our-direction'};
 export function getScenario(id:string,ko:boolean):Scenario{const found=scenarioList(ko).find(q=>q.id===(aliases[id]??id));if(found)return found;const legacy=(ko?koQuestions:questions).find(q=>q.id===id)??(ko?koQuestions:questions)[0];return {...legacy,positions:[...legacy.positions],situation:'general'}}
 export function detailedReading(d:Draw,q:Scenario,i:number,ko:boolean){
+ if(isTiming(q.id)){const r=timingReading(d,q.id,ko);return [
+  {title:ko?'질문에 대한 한 줄 답':'Answer',text:r.answer},
+  {title:ko?'시기 · 현재 상태':'Timing and status',text:`${r.speed} · ${r.window}`},
+  {title:ko?'카드에 근거한 설명':'Why this card',text:r.reason},
+  {title:ko?'시기를 바꾸는 변수':'What can change the timing',text:r.variable},
+  {title:ko?'종합 조언':'Your next step',text:r.action}
+ ]}
  const base=d.reversed?d.card.reversed:d.card.upright;
- if(!ko)return [{title:q.positions[i],text:`${d.card.name} — ${d.card.keyword}. ${base}`},{title:'In your situation',text:q.focus},{title:'A step to consider',text:q.prompt}];
- const context=q.id==='three-card'?[ '지난 관계를 돌아보면', '지금 관계에서 중요한 점', '지금과 같은 만남이 이어진다면' ][i]:q.positions[i];
+ const lens=ko?questionLens(d,q.id):q.focus;
+ const sentences=lens.match(/[^.!?。！？]+[.!?。！？]*/g)?.map(s=>s.trim())??[lens];
+ const position=q.positions[i];
+ const state=ko?(d.reversed?'현재 상태: 표현이나 행동이 막히는 부분을 먼저 봐요.':d.card.tone>0?'현재 상태: 대화나 행동으로 이어갈 여지가 있어요.':d.card.tone<0?'현재 상태: 진전보다 해결할 문제가 먼저 보여요.':'현재 상태: 서로의 의사와 조건을 더 확인해야 해요.'):(d.reversed?'Status: expression or action needs attention.':d.card.tone>0?'Status: there is room for constructive action.':d.card.tone<0?'Status: address the difficulty first.':'Status: clarify intentions and conditions.');
+ const first=base.match(/[^.!?。！？]+[.!?。！？]*/)?.[0]?.trim()??base;
+ const application=ko?(q.id==='daily'?`오늘의 일이나 대화에 적용하면, ${first} ${sentences.slice(1).join(' ')}`:`‘${position}’에 놓인 카드예요. ${q.id==='three-card'?(i===0?'앞의 설명은 과거에 남은 영향으로 읽어요.':i===1?'앞의 설명은 현재 반복되는 상황으로 읽어요.':'앞의 설명은 지금의 태도가 이어질 때의 방향으로 읽어요.'):i===0?'이 관계를 시작해서 살펴볼 지점이에요.':i===1?'좋은 점이 있더라도 이 부분이 풀리지 않으면 진전이 늦어질 수 있어요.':'앞선 두 자리와 함께 판단할 다음 선택이에요.'} ${sentences.slice(1).join(' ')}`):`In “${position}”, ${base} ${q.focus}`;
  return [
-  {title:context,text:base},
-  {title:'선택한 질문에 대입하면',text:questionLens(d,q.id)},
-  {title:i===2?'지금 해볼 일':'확인해볼 점',text:i===2?q.prompt:q.focus},
+  {title:ko?'질문에 대한 한 줄 답':'Your answer at a glance',text:`${i===0?sentences[0]:first} ${state}`},
+  {title:ko?'카드에 근거한 설명':'What the card means',text:base},
+  {title:ko?(q.id==='daily'?'오늘에 적용':'관계에 적용'):'Applying it to your situation',text:application},
+  {title:ko?'종합 조언':'Advice to take with you',text:ko&&q.situation!=='single'&&q.id!=='daily'?`${cardScene(d.card.id)} ${i===2||q.count===1?q.prompt:''}`:q.prompt},
  ];
+}
+export function readingConclusion(ds:Draw[],q:Scenario,ko:boolean){
+ const first=ko?questionLens(ds[0],q.id):q.focus;
+ if(ds.length===1)return first;
+ const last=ds[ds.length-1];
+ const caution=ds.some(d=>d.reversed||d.card.tone<0);
+ if(!ko)return `${first} ${caution?'The spread also contains hesitation or difficulty; consider that before acting.':'Read the cards as an invitation to mutual action, not a guaranteed outcome.'}`;
+ return `${first} ${caution?'다만 다른 자리에는 망설임이나 갈등을 나타내는 카드도 있어요. 좋은 신호 하나만으로 결론을 내리기보다 아래의 장애물과 조언을 함께 읽어보세요.':'다른 카드에도 뚜렷한 중단 신호보다 대화와 행동을 이어갈 여지가 보여요. 실제 진전은 두 사람이 함께 움직이는지에 달려 있어요.'} 마지막 조언인 ${last.card.name}에서는 ‘${last.card.keyword}’에 주목해요.`;
 }
 export function matchingMessage(id:number,q:Scenario,ko:boolean,original:string){if(q.situation==='breakup')return original;if(id===9)return ko?'설렘을 느끼면서도 내 속도를 지킬 수 있어요.':'You can feel the spark and still honor your own pace.';if(id===19)return ko?'상대의 선택을 존중하면서 나의 바람도 소중히 여겨 주세요.':'Respect their choice without dismissing your own hopes.';return original}
 export function spreadConnection(ds:Draw[],q:Scenario,ko:boolean){

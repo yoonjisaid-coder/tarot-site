@@ -1,14 +1,11 @@
 'use client';
-import {useRef,useState,useEffect,type PointerEvent} from 'react';
-import {ChevronLeft,ChevronRight} from 'lucide-react';
-import {Button} from './ui/button';
+import {useEffect,useRef} from 'react';
 export default function DeckBoard({total,chosen=[],limit=1,onPick,ko=false,tint=''}:{total:number;chosen?:number[];limit?:number;onPick:(i:number)=>void;ko?:boolean;tint?:string}){
- const viewport=useRef<HTMLDivElement>(null);const [width,setWidth]=useState(1000);const [rotation,setRotation]=useState(0);const drag=useRef({active:false,x:0,start:0,moved:false});
- useEffect(()=>{const el=viewport.current;if(!el)return;const observer=new ResizeObserver(()=>setWidth(el.clientWidth));observer.observe(el);return()=>observer.disconnect()},[]);
- const narrow=width<950;const radius=narrow?650:Math.max(300,(width-180)/1.82);const span=total===78?128:total===30?110:90;const clamp=(n:number)=>Math.max(-span/2,Math.min(span/2,n));
- function down(e:PointerEvent<HTMLDivElement>){if(e.button!==0)return;drag.current={active:true,x:e.clientX,start:rotation,moved:false}}
- function move(e:PointerEvent<HTMLDivElement>){const d=drag.current;if(!d.active||!narrow)return;const dx=e.clientX-d.x;if(Math.abs(dx)>7){d.moved=true;e.currentTarget.setPointerCapture(e.pointerId);setRotation(clamp(d.start+dx*.12))}}
- return <div className="arc-board"><div ref={viewport} className="arc-viewport" style={{height:narrow?330:radius*.58+200}} onPointerDown={down} onPointerMove={move} onPointerUp={()=>{drag.current.active=false}} onPointerCancel={()=>{drag.current.active=false;drag.current.moved=true}} onClickCapture={e=>{if(e.detail&&drag.current.moved){e.preventDefault();e.stopPropagation();drag.current.moved=false}}}>
- {Array.from({length:total},(_,i)=>{const angle=(i/(total-1)-.5)*span+(narrow?rotation:0);const rad=angle*Math.PI/180;const selected=chosen.includes(i);return <button key={i} type="button" className={`arc-card ${selected?'selected':''}`} aria-label={ko?`${i+1}번째 카드 선택`:`Select face-down card ${i+1}`} aria-pressed={selected} disabled={selected||chosen.length>=limit} onFocus={e=>{if(narrow&&e.currentTarget.matches(':focus-visible'))setRotation(clamp(-(i/(total-1)-.5)*span))}} onClick={()=>onPick(i)} style={{left:`calc(50% + ${Math.sin(rad)*radius}px)`,top:35+radius*(1-Math.cos(rad)),transform:`translateX(-50%) rotate(${angle}deg) translateY(${selected?-25:0}px)`,zIndex:i+1,filter:tint||undefined}}><img src="/card-back.webp" alt="" draggable={false}/>{selected&&<span className="selection-order">{chosen.indexOf(i)+1}</span>}</button>})}
- </div><div className="arc-controls"><Button variant="ghost" size="icon" disabled={!narrow||rotation>=span/2} aria-label={ko?'덱 왼쪽 카드로 회전':'Rotate to left cards'} onClick={()=>setRotation(r=>clamp(r+14))}><ChevronLeft/></Button><p>{ko?(narrow?'좌우로 드래그하거나 화살표로 덱을 돌려 주세요':`${total}장 전체에서 마음이 가는 카드를 골라 주세요`):(narrow?'Drag or use the arrows to rotate the deck':`Choose from all ${total} cards`)}</p><Button variant="ghost" size="icon" disabled={!narrow||rotation<=-span/2} aria-label={ko?'덱 오른쪽 카드로 회전':'Rotate to right cards'} onClick={()=>setRotation(r=>clamp(r-14))}><ChevronRight/></Button></div></div>
+ const board=useRef<HTMLDivElement>(null);
+ useEffect(()=>{board.current?.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})},[]);
+ return <div ref={board} className="whole-deck-board">
+ <p className="whole-deck-caption" aria-live="polite">{ko?`${total}장 전체 · ${limit}장 중 ${chosen.length}장 선택`:`All ${total} cards · ${chosen.length} of ${limit} selected`}</p>
+ <div className={`whole-deck-grid ${total===78?'classic-grid':'oracle-grid'}`} aria-label={ko?`${total}장 전체 선택판`:`All ${total} cards`}>
+ {Array.from({length:total},(_,i)=>{const selected=chosen.includes(i);return <button key={i} type="button" className={`whole-deck-card ${selected?'selected':''}`} aria-label={ko?`${i+1}번째 카드 선택`:`Select face-down card ${i+1}`} aria-pressed={selected} disabled={selected||chosen.length>=limit} onClick={()=>onPick(i)}><img src="/card-back.webp" alt="" draggable={false} style={{filter:tint||undefined}}/>{selected&&<span className="whole-deck-order">{chosen.indexOf(i)+1}</span>}</button>})}
+ </div></div>
 }
