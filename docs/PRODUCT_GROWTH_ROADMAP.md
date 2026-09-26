@@ -1,6 +1,6 @@
 # Product & Growth Roadmap
 
-Updated: 2026-09-23
+Updated: 2026-09-26
 
 This document extends the existing Untold / tarot-site plan. It does not replace the current love-tarot MVP, its interaction model, or its existing scope.
 
@@ -225,3 +225,16 @@ Requirements:
 - The 12-card Clarity and 30-card Message decks should follow the same “whole deck is understandable at a glance” principle where practical.
 
 This is an R0 UX correction and takes precedence over preserving the existing rotating-fan presentation itself; the confirmed product interaction is manual card choice, not the fan geometry.
+
+
+## 00.CONTROL TOWER 연동 운영 원칙
+
+추가: 2026-09-26
+
+- 이 프로젝트는 향후 `00.CONTROL TOWER — 중앙관제실`의 관리 대상이 된다.
+- 기존에 이 프로젝트에서 확정한 방향·Source of Truth·보류/폐기 결정은 그대로 유지하며 중앙관제실이 이를 임의로 덮어쓰지 않는다. 작업 전 최신 프로젝트 문서와 진행 상태를 확인한다.
+- 중앙관제실은 이 프로젝트의 상태, 마감, KPI, 병목, 다음 작업, AI 작업, 사용자 직접 작업, 승인대기, 실험 결과를 관리한다.
+- 가능한 반복업무는 AI가 `분석 → 작업 → QC → 승인 요청`까지 처리하고, 사용자는 외부 실행·중요 변경·창작 판단 등 필요한 부분만 최종 승인한다. 승인 요청에는 검토 가능한 결과물, QC 결과, 실행 범위를 포함한다.
+- 모든 자동화는 `Research → Plan → Produce → QC → Human Approval → Execute → Measure → Learn`의 closed loop를 지향한다. 측정과 학습 결과는 다음 작업에 반영한다.
+- 성공 기준은 자동화의 수가 아니라 **사용자의 직접 노동 감소 + 실제 프로젝트 KPI 개선**이다. 이 원칙 추가만으로 자동화가 연결되거나 실행된 것으로 기록하지 않는다.
+- 현 단계의 연애·관계 타로 MVP와 R0–R6 순서, 유료 리포트·인접 분야·추가 인프라의 보류 결정은 유지한다. 공개 전에는 QC 완료율과 사용자 작업시간을, 공개 및 측정 설정 후에는 위 Analytics and iteration의 실제 유입·리딩 완료·재방문 지표를 활용한다. 측정되지 않은 수치는 미측정으로 기록한다.
