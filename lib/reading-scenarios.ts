@@ -78,18 +78,36 @@ export function detailedReading(d:Draw,q:Scenario,i:number,ko:boolean){
   {title:ko?'종합 조언':'Advice to take with you',text:ko&&q.situation!=='single'&&q.id!=='daily'?`${cardScene(d.card.id)} ${i===2||q.count===1?q.prompt:''}`:q.prompt},
  ];
 }
+function effectiveTone(d:Draw){return d.reversed?-d.card.tone:d.card.tone}
+function spreadSignal(ds:Draw[]){const score=ds.reduce((sum,d)=>sum+effectiveTone(d),0);const positive=ds.filter(d=>effectiveTone(d)>0).length;const negative=ds.filter(d=>effectiveTone(d)<0).length;return {score,positive,negative,mixed:positive>0&&negative>0}}
+function directJudgment(ds:Draw[],q:Scenario,ko:boolean){
+ const s=spreadSignal(ds);const strong=s.score>=2, weak=s.score<=-2, mixed=s.mixed;
+ if(!ko)return strong?'The spread leans positive, but it still needs real-world follow-through.':weak?'The current spread leans against the outcome you are hoping for.':mixed?'The spread is mixed: there is some opening, but a real obstacle is still active.':'The spread is not decisive yet; the next concrete action matters more than a symbolic yes/no.';
+ const map:Record<string,[string,string,string,string]>={
+  'ex-contact':['연락이 다시 올 가능성은 높은 편이에요. 다만 연락 자체와 재회 의사는 구분해서 봐야 해요.','현재 흐름에서는 먼저 연락해 올 가능성이 낮은 편이에요. 기다림보다 내 생활을 이어가는 쪽이 낫습니다.','연락 여지는 있지만 바로 움직이는 흐름은 아니에요. 다시 말을 걸고 싶은 마음과 망설이는 이유가 같이 잡힙니다.','지금 카드만으로는 연락 여부가 한쪽으로 기울지 않아요. 실제 연락 행동이 생기는지를 기준으로 보는 편이 낫습니다.'],
+  'ex-return':['다시 연결될 여지는 있는 편이에요. 다만 예전 관계로 그대로 돌아가는 재회보다는 달라진 조건이 필요합니다.','현재 흐름에서는 재회 가능성이 낮은 편이에요. 남은 감정보다 해결되지 않은 문제가 더 크게 작용합니다.','감정이나 연결은 남아 있지만 재회를 막는 조건도 분명해요. 한쪽만 움직여서는 다시 시작되기 어렵습니다.','재회를 확신하기엔 아직 정보가 부족해요. 서로 다시 만나려는 행동이 실제로 생기는지가 갈림길입니다.'],
+  'repair':['다시 만난다면 이전과 다른 관계를 만들 여지는 있어요. 핵심은 헤어진 원인을 행동으로 바꾸는 것입니다.','지금 상태로 다시 만나면 같은 문제가 반복될 가능성이 더 커 보여요. 재회보다 원인 해결이 먼저입니다.','다시 시작할 마음과 반복될 문제 둘 다 보여요. 바뀐 행동이 확인되기 전에는 재회를 서두르지 않는 편이 낫습니다.','재회 자체보다 무엇이 실제로 달라졌는지를 먼저 확인해야 하는 흐름이에요.'],
+  'crush-feelings':['호감 쪽으로 기울어 있어요. 다만 다정함만 보지 말고 상대도 먼저 시간과 대화를 만드는지 확인하세요.','현재는 연애 호감이라고 보기엔 약한 편이에요. 친절이나 편안함을 호감으로 확대하지 않는 게 좋습니다.','호감 신호와 거리 두는 신호가 같이 보여요. 관심은 있을 수 있지만 관계를 진전시킬 준비까지 됐다고 보긴 어렵습니다.','친절인지 호감인지 아직 한쪽으로 기울지 않아요. 상대의 자발적인 연락과 만남 제안이 다음 판단 기준입니다.'],
+  'define-us':['연인으로 발전할 가능성이 높은 편이에요. 이제는 분위기보다 관계를 어떻게 정의할지 대화가 필요한 단계입니다.','현재 흐름에서는 연인 관계로 굳어질 가능성이 낮은 편이에요. 한쪽만 관계를 정하려 한다면 더 기다려도 해결되기 어렵습니다.','끌림은 있지만 관계를 정하는 데 걸리는 문제가 있어요. 감정보다 서로 원하는 관계의 형태가 같은지 확인해야 합니다.','아직 연인이 될지 판단하기엔 흐름이 중립적이에요. 관계를 정의하는 대화가 있어야 다음 단계가 보입니다.'],
+  'confess':['고백해 보는 쪽에 조금 더 무게가 실려요. 다만 답을 재촉하지 않는 방식이 좋습니다.','지금은 고백을 서두르지 않는 편이 낫습니다. 관계의 기본적인 상호 관심을 조금 더 확인하세요.','마음을 전할 여지는 있지만 상대의 반응을 낙관하기엔 걸림이 있어요. 짧고 부담 없는 표현부터 시작하는 편이 낫습니다.','지금은 고백 여부보다 서로 편하게 대화가 이어지는지 한 번 더 확인하는 게 좋습니다.'],
+  'let-go':['기다림을 완전히 끝내기보다 짧게 기준을 정해 지켜볼 여지는 있어요. 다만 상대의 실제 행동이 전제입니다.','지금은 더 기다리기보다 놓아주는 쪽이 강합니다. 상대의 움직임 없이 내 일상만 멈추는 기다림은 끝내는 편이 낫습니다.','기다릴 이유와 놓아줄 이유가 동시에 보여요. 기한 없이 기다리지 말고 확인할 행동 기준을 정하세요.','카드가 기다림과 정리 중 한쪽을 강하게 밀지는 않아요. 상대의 최근 행동을 기준으로 결정하세요.']
+ };
+ const row=map[q.id];if(row)return strong?row[0]:weak?row[1]:mixed?row[2]:row[3];
+ return strong?'현재 흐름은 질문에서 바라는 방향에 조금 더 가깝습니다. 다만 실제 행동이 이어지는지 확인해야 해요.':weak?'현재 흐름은 질문에서 바라는 결과와는 거리가 있는 편입니다. 억지로 밀기보다 걸리는 조건을 먼저 보는 게 낫습니다.':mixed?'좋은 신호와 걸림돌이 같이 보여요. 가능성은 있지만 지금 상태 그대로 자연스럽게 풀린다고 보긴 어렵습니다.':'아직 한쪽으로 결론내리기 어려운 흐름이에요. 다음 실제 행동이나 대화가 판단을 바꿀 수 있습니다.';
+}
 export function readingConclusion(ds:Draw[],q:Scenario,ko:boolean){
- const first=ko?questionLens(ds[0],q.id):q.focus;
- if(ds.length===1)return first;
- const last=ds[ds.length-1];
- const caution=ds.some(d=>d.reversed||d.card.tone<0);
- if(!ko)return `${first} ${caution?'The spread also contains hesitation or difficulty; consider that before acting.':'Read the cards as an invitation to mutual action, not a guaranteed outcome.'}`;
- return `${first} ${caution?'다만 다른 자리에는 망설임이나 갈등을 나타내는 카드도 있어요. 좋은 신호 하나만으로 결론을 내리기보다 아래의 장애물과 조언을 함께 읽어보세요.':'다른 카드에도 뚜렷한 중단 신호보다 대화와 행동을 이어갈 여지가 보여요. 실제 진전은 두 사람이 함께 움직이는지에 달려 있어요.'} 마지막 조언인 ${last.card.name}에서는 ‘${last.card.keyword}’에 주목해요.`;
+ if(ds.length===0)return '';
+ if(isTiming(q.id))return timingReading(ds[0],q.id,ko).answer;
+ const verdict=directJudgment(ds,q,ko);
+ if(ds.length===1)return verdict;
+ const s=spreadSignal(ds);const obstacle=ds.find(d=>effectiveTone(d)<0);const support=ds.find(d=>effectiveTone(d)>0);const last=ds[ds.length-1];
+ if(!ko)return `${verdict} ${support?`${support.card.name} provides the clearest opening.`:''} ${obstacle?`${obstacle.card.name} is the main restraint.`:''} The final card, ${last.card.name}, points to ${last.card.keyword.toLowerCase()} as the next condition to watch.`;
+ return `${verdict} ${support?`긍정 신호는 ${support.card.name}의 ‘${support.card.keyword}’에서 가장 선명해요.`:''} ${obstacle?`반대로 ${obstacle.card.name}의 ‘${obstacle.card.keyword}’가 지금 가장 큰 걸림돌입니다.`:''} 마지막 ${last.card.name}은 다음 흐름을 판단할 때 ‘${last.card.keyword}’가 실제 행동으로 나타나는지를 보라고 합니다.`;
 }
 export function matchingMessage(id:number,q:Scenario,ko:boolean,original:string){if(q.situation==='breakup')return original;if(id===9)return ko?'설렘을 느끼면서도 내 속도를 지킬 수 있어요.':'You can feel the spark and still honor your own pace.';if(id===19)return ko?'상대의 선택을 존중하면서 나의 바람도 소중히 여겨 주세요.':'Respect their choice without dismissing your own hopes.';return original}
 export function spreadConnection(ds:Draw[],q:Scenario,ko:boolean){
  if(ds.length<3)return '';
- const [a,b,c]=ds;
- if(ko)return `‘${q.positions[0]}’의 ${a.card.name}: ${a.reversed?a.card.reversed:a.card.upright} ‘${q.positions[1]}’의 ${b.card.name}: ${b.reversed?b.card.reversed:b.card.upright} ‘${q.positions[2]}’의 ${c.card.name}: ${c.reversed?c.card.reversed:c.card.upright}`;
- return `${a.card.name} in “${q.positions[0]}”, ${b.card.name} in “${q.positions[1]}”, and ${c.card.name} in “${q.positions[2]}”. ${q.prompt}`;
+ const [a,b,c]=ds;const tones=ds.map(effectiveTone);const progression=tones[2]>tones[0]?(ko?'처음보다 마지막 카드의 흐름이 나아져서, 중간의 문제를 넘기면 관계가 움직일 여지가 커집니다.':'The final card improves on the opening card, so the obstacle in the middle is not necessarily the endpoint.'):tones[2]<tones[0]?(ko?'처음보다 마지막 카드가 더 무거워져요. 초반의 좋은 신호만 믿고 밀기보다 뒤에서 드러난 조건을 먼저 해결해야 합니다.':'The final card is heavier than the opening, so the later condition matters more than the initial promise.'):(ko?'처음과 마지막의 힘이 비슷해서 한 번의 계기보다 반복되는 행동이 결론을 좌우합니다.':'The opening and ending are balanced; repeated behavior matters more than one moment.');
+ if(ko)return `${q.positions[0]}에서는 ${a.card.name}의 ‘${a.card.keyword}’, ${q.positions[1]}에서는 ${b.card.name}의 ‘${b.card.keyword}’, ${q.positions[2]}에서는 ${c.card.name}의 ‘${c.card.keyword}’가 이어집니다. ${progression}`;
+ return `${a.card.name} opens the spread, ${b.card.name} changes the pressure in the middle, and ${c.card.name} sets the direction. ${progression}`;
 }
