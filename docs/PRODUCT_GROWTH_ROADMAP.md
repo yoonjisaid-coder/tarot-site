@@ -1,6 +1,6 @@
 # Product & Growth Roadmap
 
-Updated: 2026-09-26
+Updated: 2026-10-05
 
 This document extends the existing Untold / tarot-site plan. It does not replace the current love-tarot MVP, its interaction model, or its existing scope.
 
@@ -137,7 +137,7 @@ Add tooling only when an identified bottleneck justifies its maintenance cost.
 ## Release sequence
 
 ### R0 — Current MVP stabilization
-Keep the existing Untold love-tarot MVP. Finish real PC/mobile browser/device QA, interpretation/design polish, brand/domain decision and public-launch readiness.
+Keep the existing Untold love-tarot MVP. Prioritize interpretation quality and actual end-to-end stability. Apply the 2026-10-05 quality decision and its 50–100-question comparison gate below; UI polish, brand/domain and monetization work must not displace it.
 
 ### R1 — Search foundation
 Strengthen the 78-card SEO pages and relationship-intent content; metadata, indexability, internal linking, sitemap/structured-data decisions, accessibility and performance QC. Connect durable social topics back into these pages.
@@ -213,7 +213,9 @@ A deeper multi-card reading may add: current pace → delay/acceleration factor 
 
 Timing copy must never say that a contact, reunion or relationship **will** occur on a guaranteed date. If the spread does not support the event itself, do not manufacture a date; state that timing is not meaningfully readable until the event possibility is established in that reading.
 
-## Full-deck visibility UX (R0 change)
+## Full-deck visibility UX (historical; superseded for geometry)
+
+Status: the grid mandate below is retained as decision history only. The later confirmed fan-restoration request takes precedence; see the 2026-10-05 decision below.
 
 The current narrow-screen rotating semicircular fan hides much of the 78-card deck at once. Keep the core interaction — shuffle → see the face-down deck → personally choose cards — but change the presentation so users can visually understand the whole deck without horizontal/rotational exploration as the default.
 
@@ -250,3 +252,46 @@ This is an R0 UX correction and takes precedence over preserving the existing ro
 - 허위 후기·인기·희소성 표현을 사용하지 않는다. 금융·건강 결과를 결정론적으로 예측하거나 전문적 판단을 대신하는 문구를 사용하지 않는다.
 - 중앙관제실 보고에는 검색 수요와 근거, 사용자 문제/의도, 진입 콘텐츠, 리딩 UX의 이탈·불편, SEO/QC 문제, 전환 및 성과, 다음 개선안을 연결한다. 관측값과 가설을 구분하고 미측정 지표는 수치를 만들지 않는다.
 - 현재 무료 MVP의 전환은 리딩 시작·완료·관련 콘텐츠 이동 등 실제 구현된 행동으로 정의한다. 유료 전환은 결제가 구현된 뒤 측정하며, 이 연동 원칙을 유료화나 인접 운세 분야의 조기 도입 근거로 사용하지 않는다.
+
+
+## 2026-10-05 quality decision — current R0 authority
+
+This confirmed decision supersedes older R0 wording wherever it conflicts. Other confirmed product scope and deferred/discarded decisions remain in force.
+
+### Priority and output contract
+
+The highest priority is **INTERPRETATION QUALITY + R0 STABILITY**, before UI expansion, additional decks/features, content expansion or monetization. A working card picker or successful build is not proof of useful interpretation.
+
+Each result must satisfy an explicit output contract:
+- Reflect the selected question and available situation context. Never invent missing context.
+- Give a clear directional answer first; explain uncertainty without evading the question.
+- Interpret the spread together, including relationships between cards, positions and supported orientations; do not concatenate card definitions.
+- Ground the judgment in cards; cards are evidence, not the subject of the answer.
+- Use specific, natural Korean and suppress repeated generic paragraphs. If a paragraph works unchanged for a different question, rewrite or delete it.
+- Explain conditions and provide realistic, situation-specific action when appropriate.
+- Avoid unsupported certainty, invented events or private thoughts, and deterministic financial, medical or legal predictions.
+
+Inspect question transport, card data, position/orientation preservation, generation logic, parsing, rendering and fallbacks before assuming the defect is a prompt issue. Keep the existing engine as the base; no model/API migration is authorized merely by this decision.
+
+### Mandatory quality gate before monetization
+
+- Compare **50–100 representative questions** using fixed cards and orientations before and after changes, including contradictory combinations, repetitions, vague/empty input, certainty/date demands and high-stakes cases.
+- Distinguish supported preset replay from actual free-text understanding. Unsupported cases are coverage gaps, not successful answers or safety passes.
+- Retain outputs, failure cases and at least ten before/after examples. Score question relevance, directness, specificity, card grounding, naturalness, non-repetition, actionability, fabrication safety and paid-product readiness on a 1–5 rubric.
+- No critical category below 4; paid-product readiness average must be at least 4. Disclose reviewer/method and do not substitute structural tests for editorial quality.
+- Run actual desktop/mobile E2E: entry → question → shuffle → full deck → selection → reveal/interpretation/result → card-detail modal → share/copy → retry, including KO/EN and Fortune Cookie regression. Preserve the existing interaction decisions.
+- Missing quality coverage or unverified production E2E means **FAIL / R0 incomplete**, even when build/API/render checks succeed.
+- **₩990 is a quality benchmark, not an approved price or permission to implement payment.**
+
+### Deferred candidates and approval boundaries
+
+Free/search entry → problem-specific landing → teaser → paid deep report remains a future monetization candidate. Do not promote it ahead of the R0 quality gate, weaken free answers, or add new deck types, subscriptions, upsells or payment features now. Public launch/deploy, domain changes, analytics, ads and payments continue to require user approval.
+
+### Interaction decision conflict recorded
+
+The earlier “Full-deck visibility UX” grid mandate is historical and superseded by the user's subsequent request to restore a semicircular fan with mobile horizontal navigation. Preserve full-deck awareness, access to the last card, reliable drag/tap, unique selection and accessibility. This sync records the decision; it does not claim that the fan has been restored or authorize a redesign ahead of interpretation work.
+
+### Status reporting
+
+Report ALREADY PRESENT / MISSING / STALE / CONFLICT against both documented decisions and actual implementation. A document update is not an implementation or QA pass. See [2026-10-05 sync audit](PROJECT_SYNC_2026-10-05.md) for observed gaps and the current incomplete quality work.
+

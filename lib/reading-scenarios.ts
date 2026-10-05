@@ -3,6 +3,7 @@ import {cardScene} from './card-scenes';
 import {questionLens} from './question-lenses';
 import {questions,type Draw} from './tarot';
 import {koQuestions} from './tarot-ko';
+import {interpretSpread} from './interpretation-contract';
 export const situations=[{id:'breakup',ko:'재회 · 이별',en:'Breakup & reunion',context:'헤어진 뒤에는 좋았던 기억과 마지막에 받은 상처가 번갈아 크게 느껴질 수 있어요. 지금 떠오르는 감정이 그 사람 자체를 향한 것인지, 함께했던 익숙한 일상을 잃은 허전함인지 구분하면 이 카드가 가리키는 지점이 더 분명해져요.'},{id:'crush',ko:'짝사랑 · 고백 전',en:'A crush & confession',context:'아직 마음을 확인하지 않은 사이에서는 짧은 눈맞춤이나 다정한 말도 오래 생각하게 되죠. 내 안의 설렘과 둘 사이에서 실제로 오간 교류를 나누어 보면, 혼자 키운 기대와 함께 자랄 가능성을 구분하기 쉬워져요.'},{id:'undefined',ko:'썸 · 애매한 관계',en:'An undefined connection',context:'가까운 날도 있지만 관계를 설명하려면 망설여지는 사이일 수 있어요. 즐거웠던 한순간만큼 연락이 끊긴 뒤 어떻게 다시 이어졌는지, 서운함을 말했을 때 어떤 반응이 돌아왔는지도 이 관계의 일부예요.'},{id:'single',ko:'솔로',en:'Single & open to love',context:'특정한 상대가 없는 지금의 리딩은 누군가의 속마음을 가정하지 않아요. 어떤 만남을 원하는지, 새 사람이 들어올 자리가 내 일상에 있는지, 반복하고 싶지 않은 관계의 습관은 무엇인지를 중심으로 읽어요.'}] as const;
 // Each question has its own three interpretive positions and practical observation.
 const rows=[
@@ -56,7 +57,12 @@ export type Scenario={id:string;situation:string;label:string;title:string;posit
 export function scenarioList(ko:boolean):Scenario[]{return rows.map(r=>({id:r[1],situation:r[0],label:ko?r[2]:r[3],title:ko?r[2]:r[3],positions:ko?r[4].split('|'):(englishPositions[r[1]]??['The underlying connection','What needs understanding','Your next step']),focus:ko?r[5]:`For “${r[3]}”, distinguish emotional possibility from what both people are actually choosing.`,prompt:ko?r[6]:'Choose one small step that respects your needs and leaves room for an honest response.',count:3})).concat(timingQuestions.map(q=>({id:q.id,situation:q.situation,label:ko?q.ko:q.en,title:ko?q.ko:q.en,positions:[ko?'시기를 읽는 카드':'Your timing card'],focus:ko?'시기 카드 1장으로 속도와 기간대, 변수를 살펴봐요.':'One card for pace, a symbolic time window and the conditions that matter.',prompt:ko?q.actionKo:'Check mutual willingness and respect boundaries.',count:1})))}
 export const aliases:Record<string,string>={'their-feelings':'crush-feelings','my-ex':'ex-misses-me','reconciliation':'repair','will-they-contact-me':'ex-contact','our-future':'our-direction'};
 export function getScenario(id:string,ko:boolean):Scenario{const found=scenarioList(ko).find(q=>q.id===(aliases[id]??id));if(found)return found;const legacy=(ko?koQuestions:questions).find(q=>q.id===id)??(ko?koQuestions:questions)[0];return {...legacy,positions:[...legacy.positions],situation:'general'}}
-export function detailedReading(d:Draw,q:Scenario,i:number,ko:boolean){
+export function detailedReading(d:Draw,q:Scenario,i:number,ko:boolean,spread?:Draw[]){
+ const contract=spread?interpretSpread(spread,q,ko):null;
+ if(contract){const evidence=contract.evidence[i];return [
+  {title:ko?'카드에 근거한 설명':'Card evidence',text:evidence.meaning},
+  {title:ko?'관계에 적용':'Position in this reading',text:`${evidence.position}: ${evidence.role}`},
+ ]}
  if(isTiming(q.id)){const r=timingReading(d,q.id,ko);return [
   {title:ko?'질문에 대한 한 줄 답':'Answer',text:r.answer},
   {title:ko?'시기 · 현재 상태':'Timing and status',text:`${r.speed} · ${r.window}`},
@@ -79,6 +85,8 @@ export function detailedReading(d:Draw,q:Scenario,i:number,ko:boolean){
  ];
 }
 export function readingConclusion(ds:Draw[],q:Scenario,ko:boolean){
+ const contract=interpretSpread(ds,q,ko);
+ if(contract)return contract.answer;
  const first=ko?questionLens(ds[0],q.id):q.focus;
  if(ds.length===1)return first;
  const last=ds[ds.length-1];
@@ -88,8 +96,12 @@ export function readingConclusion(ds:Draw[],q:Scenario,ko:boolean){
 }
 export function matchingMessage(id:number,q:Scenario,ko:boolean,original:string){if(q.situation==='breakup')return original;if(id===9)return ko?'설렘을 느끼면서도 내 속도를 지킬 수 있어요.':'You can feel the spark and still honor your own pace.';if(id===19)return ko?'상대의 선택을 존중하면서 나의 바람도 소중히 여겨 주세요.':'Respect their choice without dismissing your own hopes.';return original}
 export function spreadConnection(ds:Draw[],q:Scenario,ko:boolean){
+ const contract=interpretSpread(ds,q,ko);
+ if(contract)return contract.combination;
  if(ds.length<3)return '';
  const [a,b,c]=ds;
  if(ko)return `‘${q.positions[0]}’의 ${a.card.name}: ${a.reversed?a.card.reversed:a.card.upright} ‘${q.positions[1]}’의 ${b.card.name}: ${b.reversed?b.card.reversed:b.card.upright} ‘${q.positions[2]}’의 ${c.card.name}: ${c.reversed?c.card.reversed:c.card.upright}`;
  return `${a.card.name} in “${q.positions[0]}”, ${b.card.name} in “${q.positions[1]}”, and ${c.card.name} in “${q.positions[2]}”. ${q.prompt}`;
 }
+export function readingCondition(ds:Draw[],q:Scenario,ko:boolean){return interpretSpread(ds,q,ko)?.condition??readingConclusion(ds,q,ko)}
+export function readingAction(ds:Draw[],q:Scenario,ko:boolean){return interpretSpread(ds,q,ko)?.action??q.prompt}
