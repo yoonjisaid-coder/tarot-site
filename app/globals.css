@@ -84,3 +84,5 @@ html[lang=ko] h1,html[lang=ko] h2,html[lang=ko] h3{word-break:keep-all}
 .card-detail-dialog .detail-close{z-index:1;background:#2d1926;border-radius:50%}
 @media(max-width:700px){.card-detail-scroll{padding:25px}}
 @media(min-width:701px) and (max-width:900px){.whole-deck-grid:not(.oracle-grid){grid-template-columns:repeat(10,minmax(0,1fr))}}
+.page-share{position:relative;display:inline-flex;align-items:center}.page-share-btn{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 14px;border:1px solid var(--gold);border-radius:999px;background:none;color:var(--gold);font-size:14px}.page-share-btn:hover,.page-share-btn:focus-visible{background:#e6c38d1f}.page-share-status{position:absolute;top:100%;right:0;white-space:nowrap;font-size:12px;color:var(--muted)}.page-share-status:empty{display:none}.share-result-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+@media(max-width:700px){.page-share{margin-left:auto}.page-share-btn{min-height:36px;padding:5px 12px;font-size:13px}}
