@@ -78,3 +78,11 @@ html[lang=ko] h1,html[lang=ko] h2,html[lang=ko] h3{word-break:keep-all}
 @media(max-width:700px){.whole-deck-grid,.whole-deck-grid.oracle-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}.whole-deck-card{height:44px;padding:2px}.whole-deck-board{margin:12px 0}.room:has(.whole-deck-board){padding-inline:8px}.reading-table:has(.whole-deck-board){padding-inline:6px}.whole-deck-card:hover:not(:disabled){transform:none}.timing-overview{padding:18px}}
 @media(prefers-reduced-motion:reduce){.whole-deck-card{transition:none}.whole-deck-card:hover:not(:disabled){transform:none}}
 @media(max-width:350px){.whole-deck-grid,.whole-deck-grid.oracle-grid{gap:2px}}
+/* Keep the close control outside the modal's scrolling reading area. */
+.card-detail-dialog{width:calc(100% - 2rem)!important;padding:0!important;overflow:hidden}
+.card-detail-scroll{max-height:85dvh;overflow-y:auto;overscroll-behavior:contain;padding:32px}
+.card-detail-dialog .detail-close{z-index:1;background:#2d1926;border-radius:50%}
+@media(max-width:700px){.card-detail-scroll{padding:25px}}
+@media(min-width:701px) and (max-width:900px){.whole-deck-grid:not(.oracle-grid){grid-template-columns:repeat(10,minmax(0,1fr))}}
+.page-share{position:relative;display:inline-flex;align-items:center}.page-share-btn{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 14px;border:1px solid var(--gold);border-radius:999px;background:none;color:var(--gold);font-size:14px}.page-share-btn:hover,.page-share-btn:focus-visible{background:#e6c38d1f}.page-share-status{position:absolute;top:100%;right:0;white-space:nowrap;font-size:12px;color:var(--muted)}.page-share-status:empty{display:none}
+@media(max-width:700px){.page-share{margin-left:auto}.page-share-btn{min-height:36px;padding:5px 12px;font-size:13px}}
