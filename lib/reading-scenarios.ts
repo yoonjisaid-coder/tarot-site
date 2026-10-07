@@ -3,7 +3,7 @@ import {cardScene} from './card-scenes';
 import {questionLens} from './question-lenses';
 import {questions,type Draw} from './tarot';
 import {koQuestions} from './tarot-ko';
-import {koEngineSupports,koCardSections,koAnswer,koSummary} from './reading-engine';
+import {koEngineSupports,koCardSections,koAnswer,koSummary,koLabel} from './reading-engine';
 export const situations=[{id:'breakup',ko:'재회 · 이별',en:'Breakup & reunion',context:'헤어진 뒤에는 좋았던 기억과 마지막에 받은 상처가 번갈아 크게 느껴질 수 있어요. 지금 떠오르는 감정이 그 사람 자체를 향한 것인지, 함께했던 익숙한 일상을 잃은 허전함인지 구분하면 이 카드가 가리키는 지점이 더 분명해져요.'},{id:'crush',ko:'짝사랑 · 고백 전',en:'A crush & confession',context:'아직 마음을 확인하지 않은 사이에서는 짧은 눈맞춤이나 다정한 말도 오래 생각하게 되죠. 내 안의 설렘과 둘 사이에서 실제로 오간 교류를 나누어 보면, 혼자 키운 기대와 함께 자랄 가능성을 구분하기 쉬워져요.'},{id:'undefined',ko:'썸 · 애매한 관계',en:'An undefined connection',context:'가까운 날도 있지만 관계를 설명하려면 망설여지는 사이일 수 있어요. 즐거웠던 한순간만큼 연락이 끊긴 뒤 어떻게 다시 이어졌는지, 서운함을 말했을 때 어떤 반응이 돌아왔는지도 이 관계의 일부예요.'},{id:'single',ko:'솔로',en:'Single & open to love',context:'특정한 상대가 없는 지금의 리딩은 누군가의 속마음을 가정하지 않아요. 어떤 만남을 원하는지, 새 사람이 들어올 자리가 내 일상에 있는지, 반복하고 싶지 않은 관계의 습관은 무엇인지를 중심으로 읽어요.'}] as const;
 // Each question has its own three interpretive positions and practical observation.
 const rows=[
@@ -122,3 +122,5 @@ export function readingSummary(ds:Draw[],q:Scenario,ko:boolean){
  if(ko&&koEngineSupports(q.id)){const r=koSummary(ds,q.id,q.prompt);return {answer:r.answer,lead:r.lead,body:r.body,action:r.action}}
  return {answer:readingConclusion(ds,q,ko),lead:readingConclusion(ds,q,ko),body:spreadConnection(ds,q,ko),action:q.prompt};
 }
+// Short verdict label for the answer heading ("조건부", "가능성 낮음"…); empty when the question has none.
+export function readingLabel(ds:Draw[],q:Scenario,ko:boolean){return ko&&!isTiming(q.id)&&koEngineSupports(q.id)?koLabel(ds,q.id):''}

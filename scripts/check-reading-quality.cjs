@@ -8,7 +8,7 @@ const {koCards}=require(path.join(root,'tarot-ko.js'));
 const S=require(path.join(root,'reading-scenarios.js'));
 const {combos}=require('./quality-fixtures.cjs');
 const fail={};const add=(k,detail)=>{(fail[k]??=[]).length<3&&fail[k].push(detail)};
-let checks=0;
+let checks=0;const freq=new Map();
 const ids=S.scenarioList(true).filter(q=>q.count===3).map(q=>q.id).concat(['three-card']);
 const typeOf={'ex-contact':'contact','contact-flow':'contact','ex-silence':'wait','let-go':'wait','reach-out':'decide','confess':'decide','approach':'decide','ex-misses-me':'feel','crush-feelings':'feel','thinking-of-me':'feel','hidden-feelings':'feel','mixed-signals':'feel','ex-return':'reunion','repair':'reunion','after-reunion':'reunion','define-us':'progress','our-direction':'progress','three-card':'progress','new-love':'self','love-pattern':'self','new-connection':'self','healthy-love':'self'};
 function read(id,cards){
@@ -34,11 +34,15 @@ for(const cards of spreads){
   if(/습니다|입니다|보입니다/.test(text))add('mixed formal register',`${id}`);
   if((text.match(/흐름/g)||[]).length>2)add('"흐름" overused',`${id}`);
   if(/현재 상태:|쪽으로 읽어요\. 현재|가능성 자체를/.test(text))add('pre-rework filler phrase',`${id}`);
+  // R2 template frames flagged in human review.
+  const frame=text.match(/결과를 바꿀 수 있는 가장 큰 변수는|그 사이에서 [^.]*권해요|마음도 있고 막는 것도 크지 않아서|라는 조언이에요|그려져 있어요|빠르면 [^.]*늦어지면/);
+  if(frame)add('R2 template frame',`${id}: ${frame[0]}`);
+  for(const s1 of new Set(sentences))freq.set(s1,(freq.get(s1)||0)+1);
   // 4. Fabrication / certainty.
   if(/SNS|인스타|다른 사람을 만나|새 애인|반드시|100%|확실히 (연락|돌아|만나)|\d+월 \d+일|\d+일 (뒤|후)에?/.test(text))add('fabricated fact or false certainty',`${id}: ${text.slice(0,80)}`);
   // 5. Timing questions give a usable range plus a confidence note, or explicitly decline.
   if(['ex-contact','contact-flow','ex-return','define-us','our-direction'].includes(id)){
-   const ok=/(\d+~\d+(주|개월)|며칠~1주|반년)/.test(r.sum.body)&&/(무게를|참고하세요|약해요)/.test(r.sum.body);
+   const ok=/(\d+~\d+(주|개월)|며칠~1주|반년|\d+개월 이상)/.test(r.sum.body)&&/시기 확신도 (낮음|보통|높음)/.test(r.sum.body);
    const declined=/시기를 말하기 어려워요|흐릿해요|근거가 부족해요/.test(r.sum.body);
    if(!ok&&!declined)add('timing question without range or explicit decline',`${id}: ${r.sum.body.slice(0,80)}`);
   }
@@ -54,6 +58,8 @@ for(const cards of spreads){
   if(A.sum.answer===B.sum.answer)add('answer identical across question types',`${types[a]} vs ${types[b]}`);
  }
 }
+// Cross-reading repetition: no single sentence may appear in more than 8% of all readings.
+for(const [s1,c] of freq)if(c>checks*0.08)add('sentence repeated across readings',`${c}/${checks}: ${s1}`);
 // 7. Progression: open→blocked→recovering and open→open→breaking must not share a conclusion.
 for(const id of ['our-direction','three-card']){
  const a=read(id,combos.A),b=read(id,combos.B);checks++;

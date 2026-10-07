@@ -19,7 +19,7 @@ const rows=fixtures.map(fx=>{
   answer=timing?T.timingReading(drawn[0],q.id,true).answer:S.readingConclusion(drawn,q,true);
   summary={lead:timing?T.timingReading(drawn[0],q.id,true).variable:S.readingConclusion(drawn,q,true),body:S.spreadConnection(drawn,q,true),action:q.prompt};
  }
- return {...fx,title:q.title,answer,cards,synthesis:{lead:summary.lead,body:summary.body,action:summary.action}};
+ return {...fx,title:q.title,label:S.readingLabel?S.readingLabel(drawn,q,true):"",answer,cards,synthesis:{lead:summary.lead,body:summary.body,action:summary.action}};
 });
 fs.writeFileSync(out,JSON.stringify(rows,null,1));
 console.log(`captured ${rows.filter(r=>!r.status).length} readings, ${rows.filter(r=>r.status).length} not supported -> ${out}`);

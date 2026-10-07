@@ -58,9 +58,10 @@ export function timingReading(d:Draw,id:string,ko:boolean){
  const unit=({'contact-timing':'CONTACT','reunion-timing':'RECONCILE','progress-timing':'PROGRESS','new-love-timing':'NEWLOVE'} as const)[id as 'contact-timing'];
  // Non-contact events start at band 2, so they shift down one step on their own, slower unit scale.
  const idx=band===null?null:id==='contact-timing'?band:band-1;
- const confidence=n>=22&&rank>10?'low':'one';
+ // One card can only give a moderate signal; reversals and court cards lower it, the Eight of Wands' explicit speed raises it.
+ const confidence=n===29&&!d.reversed?'높음' as const:d.reversed||(n>=22&&rank>10)?'낮음' as const:'보통' as const;
  const window=band===null?(ko?'기간을 정하기 어려워요':'No meaningful time window'):ko?UNITS[unit][idx!]:bands[band][1];
- const answer=ko?(band===null?`${question.eventKo} 시기는 지금 카드로 정하기 어려워요. ${blocked?'날짜보다 먼저 풀어야 할 문제가 크다는 뜻이에요.':'아직 조건이 정해지지 않아서, 날짜를 붙이기보다 상황을 지켜보는 편이 맞아요.'}`:rangeText(unit,idx!,confidence)):(band===null?`This card does not support a timing window for ${question.eventEn.toLowerCase()}.`:`This reading associates the first step toward ${question.eventEn.toLowerCase()} with ${window.toLowerCase()}.`);
+ const answer=ko?(band===null?`${question.eventKo} 시기는 지금 카드로 정하기 어려워요. ${blocked?'날짜보다 먼저 풀어야 할 문제가 크다는 뜻이에요.':'아직 조건이 정해지지 않아서, 날짜를 붙이기보다 상황을 지켜보는 편이 맞아요.'}`:rangeText(unit,idx!,confidence,'카드 한 장으로 본 시기라 중심 구간으로만 참고하세요.')):(band===null?`This card does not support a timing window for ${question.eventEn.toLowerCase()}.`:`This reading associates the first step toward ${question.eventEn.toLowerCase()} with ${window.toLowerCase()}.`);
  if(!ko)reason=`${d.card.name}: ${d.reversed?d.card.reversed:d.card.upright} ${band===null?'Conditions or unresolved difficulties take precedence over a date.':'The card’s suit, stage and orientation map to an editorial pace band.'} ${d.reversed?'Reversal delays an otherwise available band; it does not guarantee a bad outcome.':''}`;
  return {band,window,speed:ko?speed:speedEn,answer,reason,variable:ko?question.variableKo:question.variableEn,action:ko?question.actionKo:'Check mutual willingness and respect boundaries before taking the next step.'};
 }
