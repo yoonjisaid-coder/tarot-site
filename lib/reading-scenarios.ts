@@ -3,6 +3,7 @@ import {cardScene} from './card-scenes';
 import {questionLens} from './question-lenses';
 import {questions,type Draw} from './tarot';
 import {koQuestions} from './tarot-ko';
+import {koEngineSupports,koCardSections,koAnswer,koSummary} from './reading-engine';
 export const situations=[{id:'breakup',ko:'재회 · 이별',en:'Breakup & reunion',context:'헤어진 뒤에는 좋았던 기억과 마지막에 받은 상처가 번갈아 크게 느껴질 수 있어요. 지금 떠오르는 감정이 그 사람 자체를 향한 것인지, 함께했던 익숙한 일상을 잃은 허전함인지 구분하면 이 카드가 가리키는 지점이 더 분명해져요.'},{id:'crush',ko:'짝사랑 · 고백 전',en:'A crush & confession',context:'아직 마음을 확인하지 않은 사이에서는 짧은 눈맞춤이나 다정한 말도 오래 생각하게 되죠. 내 안의 설렘과 둘 사이에서 실제로 오간 교류를 나누어 보면, 혼자 키운 기대와 함께 자랄 가능성을 구분하기 쉬워져요.'},{id:'undefined',ko:'썸 · 애매한 관계',en:'An undefined connection',context:'가까운 날도 있지만 관계를 설명하려면 망설여지는 사이일 수 있어요. 즐거웠던 한순간만큼 연락이 끊긴 뒤 어떻게 다시 이어졌는지, 서운함을 말했을 때 어떤 반응이 돌아왔는지도 이 관계의 일부예요.'},{id:'single',ko:'솔로',en:'Single & open to love',context:'특정한 상대가 없는 지금의 리딩은 누군가의 속마음을 가정하지 않아요. 어떤 만남을 원하는지, 새 사람이 들어올 자리가 내 일상에 있는지, 반복하고 싶지 않은 관계의 습관은 무엇인지를 중심으로 읽어요.'}] as const;
 // Each question has its own three interpretive positions and practical observation.
 const rows=[
@@ -56,7 +57,7 @@ export type Scenario={id:string;situation:string;label:string;title:string;posit
 export function scenarioList(ko:boolean):Scenario[]{return rows.map(r=>({id:r[1],situation:r[0],label:ko?r[2]:r[3],title:ko?r[2]:r[3],positions:ko?r[4].split('|'):(englishPositions[r[1]]??['The underlying connection','What needs understanding','Your next step']),focus:ko?r[5]:`For “${r[3]}”, distinguish emotional possibility from what both people are actually choosing.`,prompt:ko?r[6]:'Choose one small step that respects your needs and leaves room for an honest response.',count:3})).concat(timingQuestions.map(q=>({id:q.id,situation:q.situation,label:ko?q.ko:q.en,title:ko?q.ko:q.en,positions:[ko?'시기를 읽는 카드':'Your timing card'],focus:ko?'시기 카드 1장으로 속도와 기간대, 변수를 살펴봐요.':'One card for pace, a symbolic time window and the conditions that matter.',prompt:ko?q.actionKo:'Check mutual willingness and respect boundaries.',count:1})))}
 export const aliases:Record<string,string>={'their-feelings':'crush-feelings','my-ex':'ex-misses-me','reconciliation':'repair','will-they-contact-me':'ex-contact','our-future':'our-direction'};
 export function getScenario(id:string,ko:boolean):Scenario{const found=scenarioList(ko).find(q=>q.id===(aliases[id]??id));if(found)return found;const legacy=(ko?koQuestions:questions).find(q=>q.id===id)??(ko?koQuestions:questions)[0];return {...legacy,positions:[...legacy.positions],situation:'general'}}
-export function detailedReading(d:Draw,q:Scenario,i:number,ko:boolean){
+export function detailedReading(d:Draw,q:Scenario,i:number,ko:boolean,all?:Draw[]){
  if(isTiming(q.id)){const r=timingReading(d,q.id,ko);return [
   {title:ko?'질문에 대한 한 줄 답':'Answer',text:r.answer},
   {title:ko?'시기 · 현재 상태':'Timing and status',text:`${r.speed} · ${r.window}`},
@@ -64,6 +65,7 @@ export function detailedReading(d:Draw,q:Scenario,i:number,ko:boolean){
   {title:ko?'시기를 바꾸는 변수':'What can change the timing',text:r.variable},
   {title:ko?'종합 조언':'Your next step',text:r.action}
  ]}
+ if(ko&&all&&koEngineSupports(q.id))return koCardSections(all,q.id,i);
  const base=d.reversed?d.card.reversed:d.card.upright;
  const lens=ko?questionLens(d,q.id):q.focus;
  const sentences=lens.match(/[^.!?。！？]+[.!?。！？]*/g)?.map(s=>s.trim())??[lens];
@@ -100,6 +102,7 @@ function directJudgment(ds:Draw[],q:Scenario,ko:boolean){
 export function readingConclusion(ds:Draw[],q:Scenario,ko:boolean){
  if(ds.length===0)return '';
  if(isTiming(q.id))return timingReading(ds[0],q.id,ko).answer;
+ if(ko&&koEngineSupports(q.id))return koAnswer(ds,q.id);
  const verdict=directJudgment(ds,q,ko);
  if(ds.length===1)return verdict;
  const s=spreadSignal(ds);const obstacle=ds.find(d=>effectiveTone(d)<0);const support=ds.find(d=>effectiveTone(d)>0);const last=ds[ds.length-1];
@@ -112,4 +115,10 @@ export function spreadConnection(ds:Draw[],q:Scenario,ko:boolean){
  const [a,b,c]=ds;const tones=ds.map(effectiveTone);const s=spreadSignal(ds);const progression=tones[2]>tones[0]?(ko?(s.score<=-2?'마지막 카드는 처음보다 가볍지만 전체 흐름은 아직 무거워요. 중간의 걸림돌이 실제로 풀리는지부터 확인해야 합니다.':'처음보다 마지막 카드의 흐름이 나아져서, 중간의 문제를 넘기면 관계가 움직일 여지가 커집니다.'):(s.score<=-2?'The final card is lighter than the opening, but the spread as a whole is still heavy; check whether the middle obstacle actually eases.':'The final card improves on the opening card, so the obstacle in the middle is not necessarily the endpoint.')):tones[2]<tones[0]?(ko?(s.score>=2?'전체 흐름은 좋은 편이지만 마지막 카드가 처음보다 무거워요. 초반의 좋은 신호만 믿기보다 뒤에서 드러난 조건을 먼저 챙기세요.':'처음보다 마지막 카드가 더 무거워져요. 초반의 좋은 신호만 믿고 밀기보다 뒤에서 드러난 조건을 먼저 해결해야 합니다.'):'The final card is heavier than the opening, so the later condition matters more than the initial promise.'):(ko?'처음과 마지막의 힘이 비슷해서 한 번의 계기보다 반복되는 행동이 결론을 좌우합니다.':'The opening and ending are balanced; repeated behavior matters more than one moment.');
  if(ko)return `${q.positions[0]}에서는 ${a.card.name}의 ‘${a.card.keyword}’, ${q.positions[1]}에서는 ${b.card.name}의 ‘${b.card.keyword}’, ${q.positions[2]}에서는 ${c.card.name}의 ‘${c.card.keyword}’${josa(c.card.keyword,'이','가')} 이어집니다. ${progression}`;
  return `${a.card.name} opens the spread, ${b.card.name} changes the pressure in the middle, and ${c.card.name} sets the direction. ${progression}`;
+}
+// What the result screen shows under "the cards together": lead paragraph, timing/condition body and the next step.
+export function readingSummary(ds:Draw[],q:Scenario,ko:boolean){
+ if(isTiming(q.id)){const r=timingReading(ds[0],q.id,ko);return {answer:r.answer,lead:r.variable,body:'',action:q.prompt}}
+ if(ko&&koEngineSupports(q.id)){const r=koSummary(ds,q.id,q.prompt);return {answer:r.answer,lead:r.lead,body:r.body,action:r.action}}
+ return {answer:readingConclusion(ds,q,ko),lead:readingConclusion(ds,q,ko),body:spreadConnection(ds,q,ko),action:q.prompt};
 }
