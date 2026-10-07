@@ -6,6 +6,7 @@ import type {Draw} from './tarot';
 import {CONTACT,RECONCILE,FEELINGS,PROGRESS} from './reading-voice-partner';
 import {DECISION,LETGO,SELF} from './reading-voice-self';
 import {CORES} from './card-cores';
+import {PRACTICE} from './card-practice';
 
 export type Cls='ACT'|'WARM'|'PAST'|'WAIT'|'FOG'|'CONFLICT'|'END'|'BUILD'|'HEAL'|'BIND'|'TURN'|'TRUTH'|'EXPECT';
 type Triple=[string,string,string];
@@ -205,8 +206,7 @@ const META:Record<string,Meta>={
 
 // One-line answer for the obstacle card: the card's own obstacle, framed by what it blocks for this question type.
 const OBS_FRAME:Record<TypeKey,string>={CONTACT:'연락을 늦추는 건',RECONCILE:'다시 가까워지는 걸 막는 건',FEELINGS:'상대 마음을 가리는 건',PROGRESS:'관계가 한 단계 나아가지 못하는 이유는',DECISION:'움직이기 전에 조심할 건',LETGO:'정리를 어렵게 하는 건',SELF:'지금 발목을 잡는 건'};
-// How a card's meaning turns into an obstacle (by class), and what that obstacle does to this kind of question.
-const OBS_TURN:Record<Cls,string>={ACT:'추진력이 서두름으로 바뀌어서',WARM:'마음이 깊은 만큼 조심스러움도 커져서',PAST:'지난 기억이 지금을 가려서',WAIT:'머뭇거림이 길어져서',FOG:'불확실함이 오해를 키워서',CONFLICT:'부딪힘이 아직 가라앉지 않아서',END:'이미 정리된 마음이 남아 있어서',BUILD:'현실적인 사정이 먼저라서',HEAL:'회복에 시간이 더 필요해서',BIND:'익숙한 패턴에 묶여 있어서',TURN:'서로의 상황이 엇갈려서',TRUTH:'판단이 날카로워져서',EXPECT:'기대가 현실보다 앞서가서'};
+// What an obstacle does to this kind of question.
 const OBS_RESULT:Record<TypeKey,string>={CONTACT:'연락이 늦어지고 있어요.',RECONCILE:'다시 가까워지기가 쉽지 않아요.',FEELINGS:'마음이 행동으로 드러나지 못하고 있어요.',PROGRESS:'관계가 다음 단계로 넘어가지 못하고 있어요.',DECISION:'지금 움직이면 일이 어긋나기 쉬워요.',LETGO:'정리가 더뎌지고 있어요.',SELF:'새 출발이 더뎌지고 있어요.'};
 const ADV_AT:Record<TypeKey,string>={CONTACT:'연락을 두고는',RECONCILE:'재회를 두고는',FEELINGS:'상대 마음을 두고는',PROGRESS:'이 관계를 두고는',DECISION:'이번 결정에서는',LETGO:'기다림을 두고는',SELF:'새 출발을 앞두고는'};
 // Synthesis pieces by question type. Structure is chosen by verdict level and how the cards relate, not at random.
@@ -239,6 +239,19 @@ const coreOf=(d:Draw)=>CORES[d.card.id][d.reversed?1:0];
 const clsOf=(d:Draw):Cls=>coreOf(d)[0];
 const first=(d:Draw)=>coreOf(d)[1].split(', ')[0];
 const label=(d:Draw)=>d.card.name+(d.reversed?' 역방향':'');
+// Single-card daily and yes/no readings are not love questions: state the core without its love-only keywords
+// (e.g. The Sun: "기쁨, 밝은 확신" instead of "기쁨, 솔직한 애정, 밝은 확신").
+const LOVE_ONLY=/사랑|연애|연인|재회|상대|고백|애정|로맨틱/;
+const plainCore=(d:Draw)=>{const all=coreOf(d)[1].split(', ');const kept=all.filter(k=>!LOVE_ONLY.test(k));return kept.length?kept:all};
+const practiceOf=(d:Draw)=>PRACTICE[d.card.id][d.reversed?1:0];
+// Questions about the reader's own life (waiting/letting go, new love, daily) take the card's advice turned toward the reader;
+// relationship questions take the card's advice as written in card-cores.ts.
+const SELFWARD:TypeKey[]=['LETGO','SELF'];
+const actFor=(d:Draw,type:TypeKey)=>SELFWARD.includes(type)?practiceOf(d)[1]:coreOf(d)[3];
+// Whether the card's core is something to lean on (true) or something to handle (false). Upright waiting and memory
+// cards count as supportive except Four of Cups (apathy), Five of Cups (loss) and Two of Swords (avoidance).
+const UNWANTED=[39,40,51];
+function supportive(d:Draw){const c=clsOf(d);if(['ACT','WARM','BUILD','HEAL','TRUTH','TURN'].includes(c))return true;if(d.reversed)return false;return (c==='WAIT'||c==='PAST')&&!UNWANTED.includes(d.card.id)}
 export function koEngineSupports(id:string){return id in META}
 
 function analyse(ds:Draw[],id:string){
@@ -276,7 +289,7 @@ function analyse(ds:Draw[],id:string){
 }
 type Analysis=ReturnType<typeof analyse>;
 // Exposed for the consistency gate (scripts/check-reading-consistency.cjs).
-export function koAnalysis(ds:Draw[],id:string){const a=analyse(ds,id);return {level:a.level,type:a.m.type,items:a.items.map(x=>({role:x.role,cls:x.cls,p:x.p,core:coreOf(x.d)[1],obs:coreOf(x.d)[2],act:coreOf(x.d)[3]}))}}
+export function koAnalysis(ds:Draw[],id:string){const a=analyse(ds,id);return {level:a.level,type:a.m.type,items:a.items.map(x=>({role:x.role,cls:x.cls,p:x.p,core:coreOf(x.d)[1],obs:coreOf(x.d)[2],act:actFor(x.d,a.m.type),label:label(x.d),name:x.d.card.name,reversed:x.d.reversed,supportive:supportive(x.d)}))}}
 
 function timingFor(a:Analysis){
  const unit=a.m.unit;if(!unit)return null;
@@ -289,11 +302,11 @@ function timingFor(a:Analysis){
  const vs=paced.map(p=>p.v);const spread=Math.max(...vs)-Math.min(...vs);
  const confidence:Confidence=paced.length>=2&&spread<=1?'높음':paced.length>=2&&spread<=2?'보통':'낮음';
  const speed=(v:number)=>v<=1?'빠른':v===2?'중간 속도의':'느린';
- const names=(ps:typeof paced)=>ps.map(p=>p.x.d.card.name).join(', ');
+ const names=(ps:typeof paced)=>ps.map(p=>label(p.x.d)).join(', ');
  const words=[...new Set(paced.map(p=>speed(p.v)))];
  let basis=words.length===1?`${paced.length>1?j(names(paced),'은','는')+' 모두':j(names(paced),'은','는')} ${words[0]} 카드예요.`:`${j(names(paced.filter(p=>p.v<=1)),'은','는')||''} 빠르고 ${j(names(paced.filter(p=>p.v>=2)),'은','는')} 느린 편이라 속도가 엇갈려요.`;
  if(words.length>1&&!paced.some(p=>p.v<=1))basis=`${names(paced)}의 속도가 서로 달라요.`;
- if(heavy)basis+=` 걸림돌인 ${a.obstacle!.d.card.name}${josa(a.obstacle!.d.card.name,'이','가')} 무거워서 한 단계 늦춰 봤어요.`;
+ if(heavy)basis+=` 걸림돌인 ${j(label(a.obstacle!.d),'이','가')} 무거워서 한 단계 늦춰 봤어요.`;
  return {unit,text:rangeText(unit,center,confidence,basis),center,confidence};
 }
 
@@ -324,31 +337,85 @@ function imperative(act:string){
  return m[1]+m[2]+((m[2].charCodeAt(0)-0xac00)%28===0?'세요':'으세요');
 }
 
+// Card sections. Every line is built from the card's own core and practice entry; the reading class only picks the
+// one-line answer and the judgment bridge for the main positions. Obstacle and advice lines follow the verdict level,
+// so a positive verdict never sits next to an obstacle that "blocks" or advice that says to stop.
+const APPLY_AT:Record<TypeKey,string>={CONTACT:'연락 문제로 보면,',RECONCILE:'두 사람 사이로 보면,',FEELINGS:'상대의 태도로 보면,',PROGRESS:'지금 관계로 보면,',DECISION:'지금 내 상태로 보면,',LETGO:'지금 내 마음으로 보면,',SELF:'지금의 나로 보면,'};
+const OBS_HARD:Record<TypeKey,string>={CONTACT:'{obs|이/가} 풀리지 않는 동안에는 연락할 이유보다 미룰 이유가 더 크게 느껴져요.',RECONCILE:'{obs|이/가} 그대로라면 다시 만나도 같은 자리에서 멈추기 쉬워요.',FEELINGS:'{obs} 때문에 마음이 있어도 겉으로는 잘 드러나지 않아요.',PROGRESS:'{obs|이/가} 남아 있는 동안에는 관계를 정하자는 말이 자연스럽게 나오기 어려워요.',DECISION:'{obs|이/가} 정리되지 않은 채 움직이면 원하는 반응을 얻기 어려워요.',LETGO:'{obs|이/가} 이어지는 동안에는 기다릴지 놓을지 결정하는 일도 미뤄지기 쉬워요.',SELF:'{obs|이/가} 그대로라면 새로운 시작도 같은 지점에서 막히기 쉬워요.'};
+const OBS_SOFT:Record<TypeKey,string>={CONTACT:'{obs|은/는} 연락을 막을 정도는 아니고, 시기를 조금 늦출 수 있는 정도예요.',RECONCILE:'{obs|은/는} 재회를 막을 정도는 아니고, 다시 가까워지는 속도를 늦추는 정도예요.',FEELINGS:'{obs|은/는} 마음을 가릴 정도는 아니고, 표현을 조금 늦추는 정도예요.',PROGRESS:'{obs|은/는} 관계를 막을 정도는 아니고, 속도를 조금 늦추는 정도예요.',DECISION:'{obs|은/는} 움직임을 막을 정도는 아니고, 서두르지 않게 붙잡아 주는 정도예요.',LETGO:'{obs|은/는} 정리를 막을 정도는 아니고, 조금 더디게 하는 정도예요.',SELF:'{obs|은/는} 시작을 막을 정도는 아니고, 속도를 조금 늦추는 정도예요.'};
+const OBS_FIX:Record<TypeKey,string>={CONTACT:'연락의 물꼬를 트려면',RECONCILE:'다시 가까워지려면',FEELINGS:'상대 마음을 제대로 보려면',PROGRESS:'관계를 한 단계 나아가게 하려면',DECISION:'움직이기 전에',LETGO:'어느 쪽으로 정하든,',SELF:'이 걸림돌을 넘으려면'};
+const OBS_EASE:Record<TypeKey,string>={CONTACT:'연락을 기다리면서',RECONCILE:'다시 가까워지는 동안',FEELINGS:'마음을 확인해 가면서',PROGRESS:'관계를 키워 가면서',DECISION:'움직이면서도',LETGO:'마음을 정리하는 동안',SELF:'새로 시작하면서'};
+const ADV_SCOPE:Record<TypeKey,string>={CONTACT:'연락 문제에서',RECONCILE:'재회 문제에서',FEELINGS:'상대 마음을 알아 가는 과정에서',PROGRESS:'관계를 정하는 과정에서',DECISION:'이번 결정에서',LETGO:'기다림에 답을 내리는 과정에서',SELF:'새 출발을 준비하는 과정에서'};
+// The advice position is always about the reader's side, whoever the question is about.
+const ADV_ME:Record<TypeKey,string>={CONTACT:'연락을 앞둔 내 쪽에서 보면,',RECONCILE:'다시 만나려는 내 쪽에서 보면,',FEELINGS:'상대 마음보다 내 쪽에서 보면,',PROGRESS:'관계를 정하려는 내 쪽에서 보면,',DECISION:'지금 내 상태로 보면,',LETGO:'지금 내 마음으로 보면,',SELF:'지금의 나로 보면,'};
+// Lead-ins for the advice card's concrete step toward the other person (relationship questions).
+const RSTEP_AT:Record<TypeKey,string>={CONTACT:'연락과 관련해서는',RECONCILE:'재회와 관련해서는',FEELINGS:'상대 마음과 관련해서는',PROGRESS:'관계를 정하는 일에서는',DECISION:'이번에는',LETGO:'',SELF:''};
+const STEP_AT:Record<TypeKey,string>={CONTACT:'연락을 기다리는 동안',RECONCILE:'다시 만나기 전에',FEELINGS:'상대 마음을 짐작하기 전에',PROGRESS:'관계를 정하기 전에',DECISION:'결정하기 전에',LETGO:'마음을 정리하는 동안',SELF:'새 출발을 준비하며'};
+const DAILY_ACT=['좋은 기운이 받쳐 주는 날이니, 작은 일이라도 끝까지 마무리해 보세요.','천천히 가도 괜찮은 날이에요. 무리한 약속은 잡지 않는 편이 좋아요.','좋은 일과 신경 쓰이는 일을 섞지 말고, 하나씩 따로 처리해 보세요.','컨디션을 지키는 게 우선인 날이에요. 일정을 하나 덜어 내도 괜찮아요.','확실하지 않은 일은 다음으로 넘기고, 지금 할 수 있는 일만 하세요.'];
+const YESNO_ACT=['망설임이 길어지기 전에 정한 쪽으로 첫걸음을 떼 보세요.','방향은 맞지만 때를 조금 기다리는 편이 좋아요.','걸리는 조건 하나를 먼저 확인하고 나서 움직이세요.','지금은 멈추고, 상황이 달라진 뒤에 다시 물어보세요.','정보를 하나 더 모은 뒤에 다시 판단하세요.'];
+const ira=(w:string)=>w+josa(w,'이라는','라는');
+const MOVING:Cls[]=['ACT','TRUTH','WARM','TURN'];
+
 export function koCardSections(ds:Draw[],id:string,index:number){
- const a=analyse(ds,id);const used=new Set<string>();
+ const a=analyse(ds,id);const used=new Set<string>();const type=a.m.type;
  let out:{title:string;text:string}[]=[];
  for(const x of a.items){
-  const v=VOICES[x.voice][x.cls];const key=x.role==='o'?'o':x.role==='a'?'a':'s';
-  const [,core,obs,act]=coreOf(x.d);
-  const extra=[`${j(x.d.card.name,'도','도')} 앞의 카드와 같은 쪽을 가리켜요.`,'같은 신호가 겹쳐 나온 만큼, 이 부분이 이번 리딩에서 특히 중요해요.','앞에서 정한 행동을 한 번 더 확인하는 카드로 받아들이세요.'];
-  const pick=(slot:number,...c:string[])=>{const f=c.find(s=>!used.has(s))??extra[slot];used.add(f);return f};
-  const claim=x.role==='o'?`${OBS_FRAME[x.voice]} ${obs}${josa(obs,'이에요','예요')}.`
-   :x.role==='past'?`처음 이 관계를 이끈 건 ${first(x.d)}${josa(first(x.d),'이에요','예요')}.`
-   :x.role==='next'?`앞으로 이 관계는 ${first(x.d)} 쪽으로 가요.`
-   :x.role==='a'?`${ADV_AT[x.voice]} ${imperative(act)}.`
-   :pick(0,v[key][0],v.a[0]);
-  const apply=x.role==='past'?(x.p>0?'그때 쌓인 좋은 감정이 지금도 관계를 받쳐 주고 있어요.':x.p<0?'그때 생긴 어려움이 지금 관계에도 흔적을 남기고 있어요.':'그때의 분위기가 지금 관계의 출발점이 되었어요.'):x.role==='next'?pick(1,v.a[1],v.s[1]):pick(1,v[key][1],v.a[1]);
-  const actText=x.role==='next'?pick(2,v.a[2],v.s[2]):pick(2,v[key][2],v.a[2]);
+  const v=VOICES[x.voice][x.cls];
+  const [,core,obs]=coreOf(x.d);const [scene,,step]=practiceOf(x.d);
+  const act=actFor(x.d,type),imp=imperative(act),f=first(x.d),sup=supportive(x.d);
   const meaning=`${j(label(x.d),'은','는')} ${j(core,'을','를')} 뜻해요.`;
-  const imp=judge(v.w);const repeat=x.role!=='o'&&x.role!=='a'&&used.has(imp);used.add(imp);
-  const evidence=x.role==='o'?`${meaning} 걸림돌 자리에서는 ${OBS_TURN[x.cls]} ${OBS_RESULT[x.voice]}`
-   :x.role==='a'?`${meaning} ${pick(0,v.a[0],v.s[0])}`
-   :repeat?(used.has('#same')?`${meaning} 세 장이 모두 같은 쪽을 가리켜서, 이번 리딩의 방향은 분명해요.`:(used.add('#same'),`${meaning} 앞의 카드와 같은 방향이라 판단에 무게가 더 실려요.`))
-   :`${meaning} ${imp}`;
+  const extra=[`${j(x.d.card.name,'도','도')} 앞의 카드와 같은 쪽을 가리켜요.`,'같은 신호가 겹쳐 나온 만큼, 이 부분이 이번 리딩에서 특히 중요해요.','앞에서 정한 행동을 한 번 더 확인하는 카드로 받아들이세요.'];
+  const pick=(slot:number,...c:string[])=>{const s=c.find(t=>!used.has(t))??extra[slot];used.add(s);return s};
+  let claim:string,evidence:string,apply:string,actText:string;
+  if(id==='daily'){
+   claim=`오늘 신경 쓸 건 ${act}${josa(act,'이에요','예요')}.`;
+   evidence=`${j(label(x.d),'은','는')} ${j(plainCore(x.d).join(', '),'을','를')} 뜻해요. ${scene}`;apply=`오늘 안에 ${step}`;actText=DAILY_ACT[a.level];
+  }else if(id==='yes-no'){
+   const self=practiceOf(x.d)[1];
+   claim=`카드가 가리키는 쪽은 ${self}${josa(self,'이에요','예요')}.`;
+   evidence=`${j(label(x.d),'은','는')} ${j(plainCore(x.d).join(', '),'을','를')} 뜻해요. ${scene}`;apply=`${STEP_AT.DECISION} ${step}`;actText=YESNO_ACT[a.level];
+  }else if(x.role==='o'){
+   const soft=a.level<=1;
+   claim=`${OBS_FRAME[x.voice]} ${obs}${josa(obs,'이에요','예요')}.`;
+   evidence=soft?`${meaning} 걸림돌 자리에 나왔지만, ${ADV_SCOPE[x.voice]} ${label(x.d)}의 무게는 크지 않아요.`
+    :`${meaning} 걸림돌 자리에서는 이 뜻이 ${sup?'지나치게 작용해서':'그대로 부담이 돼서'} ${OBS_RESULT[x.voice]}`;
+   apply=fill(soft?OBS_SOFT[x.voice]:OBS_HARD[x.voice],{obs});
+   actText=soft?`${OBS_EASE[x.voice]} ${j(act,'을','를')} 함께 챙기세요.`:`${OBS_FIX[x.voice]} ${imp}.`;
+  }else if(x.role==='a'){
+   const p=x.p,moving=MOVING.includes(x.cls)&&p>0;
+   // "What love suits me" asks for a standard to keep, not a fresh start.
+   const hl=id==='healthy-love';
+   claim=hl?`놓치지 말아야 할 기준은 ${act}${josa(act,'이에요','예요')}.`
+    :a.level===2&&moving?`${ADV_AT[x.voice]} 부담 없는 선에서 ${imp}.`
+    :a.level===3&&moving?`${ADV_AT[x.voice]} 지금 당장보다는 때를 봐서 ${imp}.`
+    :a.level<=1&&p<0?`${ADV_AT[x.voice]} 서두르기 전에 먼저 ${imp}.`
+    :`${ADV_AT[x.voice]} ${imp}.`;
+   evidence=`${meaning} 조언 자리에 나온 만큼, ${hl?'나에게 맞는 사랑을 찾는 과정에서':ADV_SCOPE[x.voice]} ${sup?'필요한':'다뤄야 할'} 건 ${ira(f)} 뜻이에요.`;
+   apply=`${ADV_ME[x.voice]} ${scene}`;
+   actText=SELFWARD.includes(type)?`${hl?'나에게 맞는 사랑을 찾는 동안':STEP_AT[x.voice]} ${step}`
+    :`${RSTEP_AT[x.voice]} ${a.level===3&&moving?'때가 오면 ':''}${practiceOf(x.d)[3]}`;
+  }else if(id==='healthy-love'||(id==='love-pattern'&&x.i===0)){
+   // These positions ask what kind of love fits or what keeps attracting the reader, not whether they are ready.
+   claim=id==='love-pattern'?`내가 익숙하게 끌리는 건 ${f}${josa(f,'이에요','예요')}.`
+    :x.i===0?(sup?`내가 원하는 사랑의 중심에는 ${j(f,'이','가')} 있어요.`:`내가 원하는 사랑은 ${j(f,'이','가')} 없는 관계예요.`)
+    :(sup?`편안함을 만드는 조건은 ${f}${josa(f,'이에요','예요')}.`:`편안하려면 ${j(f,'을','를')} 피할 수 있어야 해요.`);
+   evidence=`${meaning} ${scene}`;
+   apply=id==='love-pattern'?(sup?`${f}에 끌리는 건 자연스러워요. 다만 그 끌림이 나를 편하게 하는지 한 번 더 살펴보세요.`:`${j(obs,'이','가')} 반복된다면, 그건 끌림이라기보다 익숙함일 수 있어요.`)
+    :(sup?`누군가를 알아갈 때 ${j(f,'을','를')} 함께 느낄 수 있는지 살펴보세요.`:`누군가를 알아갈 때 ${j(obs,'이','가')} 반복된다면 한 걸음 물러서세요.`);
+   actText=`${imp}.`;
+  }else{
+   claim=x.role==='past'?`처음 이 관계를 이끈 건 ${f}${josa(f,'이에요','예요')}.`
+    :x.role==='next'?`앞으로 이 관계는 ${f} 쪽으로 가요.`
+    :pick(0,v.s[0],v.a[0]);
+   const judged=judge(v.w);const repeat=used.has(judged);used.add(judged);
+   evidence=repeat?(used.has('#same')?`${meaning} 세 장이 모두 같은 쪽을 가리켜서, 이번 리딩의 방향은 분명해요.`:(used.add('#same'),`${meaning} 앞의 카드와 같은 방향이라 판단에 무게가 더 실려요.`)):`${meaning} ${judged}`;
+   apply=`${x.role==='past'?'관계가 시작될 무렵을 보면,':x.role==='next'?'앞으로를 보면,':APPLY_AT[x.voice]} ${scene}`;
+   actText=x.role==='next'?pick(2,v.a[2],v.s[2]):pick(2,v.s[2],v.a[2]);
+  }
   if(x.i===index)out=[
    {title:'질문에 대한 한 줄 답',text:claim},
    {title:'카드에 근거한 설명',text:evidence},
-   {title:'관계에 적용',text:apply},
+   {title:id==='daily'?'오늘에 적용':id==='yes-no'?'상황에 적용':'관계에 적용',text:apply},
    {title:'종합 조언',text:actText},
   ];
  }
@@ -357,22 +424,24 @@ export function koCardSections(ds:Draw[],id:string,index:number){
 
 function adviceLine(a:Analysis){
  const ad=a.items[2];if(!ad||ad.role!=='a')return '';
- const n=ad.d.card.name,act=coreOf(ad.d)[3];
- const moving=['ACT','TRUTH','WARM','TURN'].includes(ad.cls);
+ const n=label(ad.d),act=actFor(ad.d,a.m.type);
+ const moving=MOVING.includes(ad.cls);
  // An action-leaning advice card under a cautious verdict: keep it, but scale it down in the card's own register.
  const SMALL:Record<string,string>={ACT:'한 번에 크게 움직이기보다 가볍게 시작해 보라는 뜻이에요.',TRUTH:'결론을 내리기보다 솔직한 한마디부터 건네 보라는 뜻이에요.',WARM:'큰 표현보다 부담 없는 다정함부터 보여 주라는 뜻이에요.',TURN:'변화를 억지로 만들기보다 생기는 기회를 놓치지 말라는 뜻이에요.'};
  if(a.level>=2&&a.level<=3&&ad.p>0&&moving)return `다만 ${j(n,'은','는')} ${j(act,'을','를')} 권해요. ${SMALL[ad.cls]}`;
  if(a.level<=1&&ad.p<0)return `그래도 ${j(n,'이','가')} ${j(act,'을','를')} 말하는 만큼, 서두르지는 마세요.`;
  if(a.level<=1)return `${n}${josa(n,'이','가')} 말하는 건 ${act}${josa(act,'이에요','예요')}.`;
+ // Wait-or-let-go "set a deadline" verdict: the advice card says how to spend that window, not what comes first instead of it.
+ if(a.level===2&&a.m===META['let-go'])return `기한을 두고 지켜보는 동안에는 ${n}의 조언대로 ${j(act,'이','가')} 도움이 돼요.`;
  if(a.level===2)return `${n}${josa(n,'이','가')} 권하는 대로, 지금은 ${j(act,'이','가')} 먼저예요.`;
  if(a.level===3)return `${j(n,'은','는')} ${j(act,'을','를')} 권해요.`;
  return `그동안 할 수 있는 건 ${act}${josa(act,'이에요','예요')}.`;
 }
 
 export function koSummary(ds:Draw[],id:string,prompt:string){
- const a=analyse(ds,id);const t=a.m.type;const it=a.items;const n=(k:number)=>it[k].d.card.name;
+ const a=analyse(ds,id);const t=a.m.type;const it=a.items;const n=(k:number)=>label(it[k].d);
  let lead:string;
- if(it.length===1){lead=`한 장으로 보는 리딩이라, ${n(0)}의 핵심인 ${j(first(it[0].d),'이','가')} 그대로 답이 돼요.`}
+ if(it.length===1){lead=`한 장으로 보는 리딩이라, ${n(0)}의 핵심인 ${j(plainCore(it[0].d)[0],'이','가')} 그대로 답이 돼요.`}
  else if(a.outcome){
   const c=it[1],o=it[2];const arc=o.p>0&&c.p>0?ARC.up:o.p>0?ARC.recover:c.p>0&&o.p<0?ARC.fall:o.p<0?ARC.down:ARC.open;
   const start=it[0].role==='past'?`처음엔 ${n(0)}의 ${j(first(it[0].d),'이','가')} 관계를 이끌었어요. `:`두 사람의 바탕에는 ${n(0)}의 ${j(first(it[0].d),'이','가')} 있어요. `;

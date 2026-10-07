@@ -53,5 +53,45 @@ for(const [c,r] of [[41,false],[44,true],[42,false]]){
  const a=E.koAnalysis(cards,'let-go');checks++;
  if(a.level===3)add('let-go: memory/expectation evidence read as "keep waiting"',`${koCards[c].name}${r?' 역':''}`);
 }
+// R3.1 checks: the regressions found in the R3 human-review set.
+const selfward=['LETGO','SELF'];const applyBy=new Map();
+seed=23;
+for(let t=0;t<200;t++){
+ const set=new Set();while(set.size<3)set.add(Math.floor(rnd()*78));
+ const cards=[...set].map(c=>({card:koCards[c],reversed:rnd()<.5}));
+ for(const id of ids){
+  const q=S.getScenario(id,true);const sec=cards.map((d,i)=>S.detailedReading(d,q,i,true,cards));const sum=S.readingSummary(cards,q,true);
+  const a=E.koAnalysis(cards,id);checks++;
+  // 8. A reversed card is never named in the synthesis as if it were upright.
+  for(const x of a.items)if(x.reversed){
+   // One-letter names (힘, 별, 달, 탑) are also ordinary words, so for them only count "name의" mentions at a word start.
+   const text=' '+sum.lead+' '+sum.body;const count=t=>text.split(t).length-1;
+   const bad=x.name.length>1?count(' '+x.name)!==count(' '+x.label):count(' '+x.name+'의 ')>0;
+   if(bad)add('reversed card read as upright in synthesis',`${id}: ${x.label} / ${sum.lead.slice(0,90)}`);
+  }
+  a.items.forEach((x,i)=>{
+   // 9. Under a positive verdict the obstacle is described as slowing things down, not blocking them.
+   if(x.role==='o'&&a.level<=1&&!sec[i][1].text.includes('걸림돌 자리에 나왔지만'))add('positive verdict with a blocking obstacle',`${id}: ${sec[i][1].text.slice(0,80)}`);
+   // 10. Questions about the reader's own life get advice aimed at the reader, not at a partner.
+   if(x.role==='a'&&selfward.includes(a.type)&&/상대|함께 그리는|주고받으며/.test(sec[i][0].text))add('partner-directed advice on a self question',`${id}: ${sec[i][0].text}`);
+   // 11. Same question type and position: the application line comes from the card, not from its class.
+   const k=`${id}|${i}|${x.cls}`;const m=applyBy.get(k)??new Map();applyBy.set(k,m);m.set(x.label,sec[i][2].text);
+  });
+  // 12. Wait-or-let-go "set a deadline" verdict: the advice card must not be offered as what comes first instead of the deadline.
+  if(id==='let-go'&&a.level===2&&/먼저예요/.test(sum.lead))add('let-go deadline verdict with a competing priority',sum.lead.slice(0,90));
+ }
+}
+for(const [k,m] of applyBy){const texts=[...m.values()];if(new Set(texts).size<texts.length)add('same class shares one application line',k)}
+// 13. Daily and yes/no readings stay out of love-specific wording for every card and orientation.
+for(const id of ['daily','yes-no'])for(let c=0;c<78;c++)for(const r of [false,true]){
+ const q=S.getScenario(id,true);const ds=[{card:koCards[c],reversed:r}];checks++;
+ const text=[...S.detailedReading(ds[0],q,0,true,ds).map(s=>s.text),S.readingSummary(ds,q,true).lead].join(' ');
+ const hit=text.split(koCards[c].name).join('').match(/사랑|연애|연인|재회|상대|고백|애정/);if(hit)add(`${id}: love-specific wording`,`${koCards[c].name}${r?' 역':''}: ${hit[0]}`);
+}
+// 14. "What love suits me" positions answer that question from the card, not with readiness wording.
+for(let c=0;c<78;c++){
+ const q=S.getScenario('healthy-love',true);const ds=[0,1,2].map(i=>({card:koCards[(c+i*7)%78],reversed:i===1}));checks++;
+ for(let i=0;i<2;i++){const t=S.detailedReading(ds[i],q,i,true,ds)[0].text;if(/여유가 있어요|준비가 된|준비됐/.test(t)||!/사랑|편안/.test(t))add('healthy-love position answered with readiness wording',t)}
+}
 if(Object.keys(fail).length){console.error(JSON.stringify(fail,null,1));throw Error(`FAIL: ${Object.keys(fail).length} consistency categories across ${checks} readings`)}
 console.log(`PASS: ${checks} readings — card cores stated, obstacle named consistently, verdict/evidence/advice/timing aligned. Detector only; not a quality score.`);
