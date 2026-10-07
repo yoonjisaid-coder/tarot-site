@@ -52,7 +52,7 @@ for(const cards of spreads){
  const types=Object.keys(byType);
  for(let a=0;a<types.length;a++)for(let b=a+1;b<types.length;b++){
   const A=byType[types[a]][0],B=byType[types[b]][0];
-  for(let i=0;i<3;i++)for(let k=0;k<4;k++){
+  for(let i=0;i<3;i++)for(let k=0;k<Math.min(A.sections[i].length,B.sections[i].length);k++){
    if(A.sections[i][k].text===B.sections[i][k].text)add('card section identical across question types',`${types[a]} vs ${types[b]} card ${i+1} "${A.sections[i][k].title}"`);
   }
   if(A.sum.answer===B.sum.answer)add('answer identical across question types',`${types[a]} vs ${types[b]}`);

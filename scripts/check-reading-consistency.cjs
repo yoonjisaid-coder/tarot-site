@@ -54,7 +54,7 @@ for(const [c,r] of [[41,false],[44,true],[42,false]]){
  if(a.level===3)add('let-go: memory/expectation evidence read as "keep waiting"',`${koCards[c].name}${r?' 역':''}`);
 }
 // R3.1 checks: the regressions found in the R3 human-review set.
-const selfward=['LETGO','SELF'];const applyBy=new Map();
+const selfward=['LETGO','SELF'];const applyBy=new Map();const actions={};
 seed=23;
 for(let t=0;t<200;t++){
  const set=new Set();while(set.size<3)set.add(Math.floor(rnd()*78));
@@ -71,16 +71,25 @@ for(let t=0;t<200;t++){
   }
   a.items.forEach((x,i)=>{
    // 9. Under a positive verdict the obstacle is described as slowing things down, not blocking them.
-   if(x.role==='o'&&a.level<=1&&!sec[i][1].text.includes('걸림돌 자리에 나왔지만'))add('positive verdict with a blocking obstacle',`${id}: ${sec[i][1].text.slice(0,80)}`);
+   if(x.role==='o'&&a.level<=1&&!/정도는 아니고/.test(sec[i][1].text))add('positive verdict with a blocking obstacle',`${id}: ${sec[i][1].text.slice(0,80)}`);
    // 10. Questions about the reader's own life get advice aimed at the reader, not at a partner.
    if(x.role==='a'&&selfward.includes(a.type)&&/상대|함께 그리는|주고받으며/.test(sec[i][0].text))add('partner-directed advice on a self question',`${id}: ${sec[i][0].text}`);
    // 11. Same question type and position: the application line comes from the card, not from its class.
    const k=`${id}|${i}|${x.cls}`;const m=applyBy.get(k)??new Map();applyBy.set(k,m);m.set(x.label,sec[i][2].text);
+   // 11b. Same position, same class, different card: the one-line answer comes from the card, not from its class.
+   if(['s','now'].includes(x.role)){const ck=k+'|claim';const cm=applyBy.get(ck)??new Map();applyBy.set(ck,cm);cm.set(x.label,sec[i][0].text)}
   });
+  // 12a. Constructions flagged in R3.1 review must not come back.
+  const all=[...sec.flat().map(z=>z.text),sum.answer,sum.lead,sum.action].join(' ');
+  const awk=all.match(/라는 뜻이에요|함께 챙기세요|물꼬를 트려면|크게 키우지 않으면/);if(awk)add('awkward construction',`${id}: ${awk[0]}`);
+  // 12b. The next step is not a fixed per-question line: none when the advice card already gives a step, otherwise from the cards.
+  if(a.items.some(x=>x.role==='a')&&sum.action)add('next step repeats the advice card',id);
+  (actions[id]??=new Set()).add(sum.action);
   // 12. Wait-or-let-go "set a deadline" verdict: the advice card must not be offered as what comes first instead of the deadline.
   if(id==='let-go'&&a.level===2&&/먼저예요/.test(sum.lead))add('let-go deadline verdict with a competing priority',sum.lead.slice(0,90));
  }
 }
+for(const [qid,set] of Object.entries(actions))if(set.size===1&&[...set][0])add('next step fixed per question',qid);
 for(const [k,m] of applyBy){const texts=[...m.values()];if(new Set(texts).size<texts.length)add('same class shares one application line',k)}
 // 13. Daily and yes/no readings stay out of love-specific wording for every card and orientation.
 for(const id of ['daily','yes-no'])for(let c=0;c<78;c++)for(const r of [false,true]){

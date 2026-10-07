@@ -119,7 +119,7 @@ export function spreadConnection(ds:Draw[],q:Scenario,ko:boolean){
 // What the result screen shows under "the cards together": lead paragraph, timing/condition body and the next step.
 export function readingSummary(ds:Draw[],q:Scenario,ko:boolean){
  if(isTiming(q.id)){const r=timingReading(ds[0],q.id,ko);return {answer:r.answer,lead:r.variable,body:'',action:q.prompt}}
- if(ko&&koEngineSupports(q.id)){const r=koSummary(ds,q.id,q.prompt);return {answer:r.answer,lead:r.lead,body:r.body,action:r.action}}
+ if(ko&&koEngineSupports(q.id)){const r=koSummary(ds,q.id);return {answer:r.answer,lead:r.lead,body:r.body,action:r.action}}
  return {answer:readingConclusion(ds,q,ko),lead:readingConclusion(ds,q,ko),body:spreadConnection(ds,q,ko),action:q.prompt};
 }
 // Short verdict label for the answer heading ("조건부", "가능성 낮음"…); empty when the question has none.
