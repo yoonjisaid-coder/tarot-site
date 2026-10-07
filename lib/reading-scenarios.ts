@@ -70,7 +70,7 @@ export function detailedReading(d:Draw,q:Scenario,i:number,ko:boolean){
  const position=q.positions[i];
  const state=ko?(d.reversed?'현재 상태: 표현이나 행동이 막히는 부분을 먼저 봐요.':d.card.tone>0?'현재 상태: 대화나 행동으로 이어갈 여지가 있어요.':d.card.tone<0?'현재 상태: 진전보다 해결할 문제가 먼저 보여요.':'현재 상태: 서로의 의사와 조건을 더 확인해야 해요.'):(d.reversed?'Status: expression or action needs attention.':d.card.tone>0?'Status: there is room for constructive action.':d.card.tone<0?'Status: address the difficulty first.':'Status: clarify intentions and conditions.');
  const first=base.match(/[^.!?。！？]+[.!?。！？]*/)?.[0]?.trim()??base;
- const application=ko?(q.id==='daily'?`오늘의 일이나 대화에 적용하면, ${first} ${sentences.slice(1).join(' ')}`:`‘${position}’에 놓인 카드예요. ${q.id==='three-card'?(i===0?'앞의 설명은 과거에 남은 영향으로 읽어요.':i===1?'앞의 설명은 현재 반복되는 상황으로 읽어요.':'앞의 설명은 지금의 태도가 이어질 때의 방향으로 읽어요.'):i===0?'이 관계를 시작해서 살펴볼 지점이에요.':i===1?'좋은 점이 있더라도 이 부분이 풀리지 않으면 진전이 늦어질 수 있어요.':'앞선 두 자리와 함께 판단할 다음 선택이에요.'} ${sentences.slice(1).join(' ')}`):`In “${position}”, ${base} ${q.focus}`;
+ const application=ko?(q.id==='daily'?`오늘의 일이나 대화에 적용하면, ${first} ${sentences.slice(1).join(' ')}`:`‘${position}’에 놓인 카드예요. ${q.id==='three-card'?(i===0?'앞의 설명은 과거에 남은 영향으로 읽어요.':i===1?'앞의 설명은 현재 반복되는 상황으로 읽어요.':'앞의 설명은 지금의 태도가 이어질 때의 방향으로 읽어요.'):i===0?'이 자리에서부터 질문을 풀어 가요.':i===1?'좋은 점이 있더라도 이 부분이 풀리지 않으면 진전이 늦어질 수 있어요.':'앞선 두 자리와 함께 판단할 다음 선택이에요.'} ${sentences.slice(1).join(' ')}`):`In “${position}”, ${base} ${q.focus}`;
  return [
   {title:ko?'질문에 대한 한 줄 답':'Your answer at a glance',text:`${i===0?sentences[0]:first} ${state}`},
   {title:ko?'카드에 근거한 설명':'What the card means',text:base},
@@ -79,6 +79,8 @@ export function detailedReading(d:Draw,q:Scenario,i:number,ko:boolean){
  ];
 }
 function effectiveTone(d:Draw){return d.reversed?-d.card.tone:d.card.tone}
+// Pick the Korean particle by whether the word ends in a final consonant (digits read as Sino-Korean).
+function josa(word:string,withBatchim:string,without:string){const last=word.replace(/[’'”"\s)]+$/,'').slice(-1);if(/[0-9]/.test(last))return '013678'.includes(last)?withBatchim:without;const code=last.charCodeAt(0)-0xac00;if(code<0||code>11171)return without;return code%28?withBatchim:without}
 function spreadSignal(ds:Draw[]){const score=ds.reduce((sum,d)=>sum+effectiveTone(d),0);const positive=ds.filter(d=>effectiveTone(d)>0).length;const negative=ds.filter(d=>effectiveTone(d)<0).length;return {score,positive,negative,mixed:positive>0&&negative>0}}
 function directJudgment(ds:Draw[],q:Scenario,ko:boolean){
  const s=spreadSignal(ds);const strong=s.score>=2, weak=s.score<=-2, mixed=s.mixed;
@@ -102,12 +104,12 @@ export function readingConclusion(ds:Draw[],q:Scenario,ko:boolean){
  if(ds.length===1)return verdict;
  const s=spreadSignal(ds);const obstacle=ds.find(d=>effectiveTone(d)<0);const support=ds.find(d=>effectiveTone(d)>0);const last=ds[ds.length-1];
  if(!ko)return `${verdict} ${support?`${support.card.name} provides the clearest opening.`:''} ${obstacle?`${obstacle.card.name} is the main restraint.`:''} The final card, ${last.card.name}, points to ${last.card.keyword.toLowerCase()} as the next condition to watch.`;
- return `${verdict} ${support?`긍정 신호는 ${support.card.name}의 ‘${support.card.keyword}’에서 가장 선명해요.`:''} ${obstacle?`반대로 ${obstacle.card.name}의 ‘${obstacle.card.keyword}’가 지금 가장 큰 걸림돌입니다.`:''} 마지막 ${last.card.name}은 다음 흐름을 판단할 때 ‘${last.card.keyword}’가 실제 행동으로 나타나는지를 보라고 합니다.`;
+ return [verdict,support&&`긍정 신호는 ${support.card.name}의 ‘${support.card.keyword}’에서 가장 선명해요.`,obstacle&&`${support?'반면 ':''}${obstacle.card.name}의 ‘${obstacle.card.keyword}’${josa(obstacle.card.keyword,'이','가')} 지금 가장 큰 걸림돌입니다.`,`마지막 ${last.card.name}${josa(last.card.name,'은','는')} 다음 흐름을 판단할 때 ‘${last.card.keyword}’${josa(last.card.keyword,'이','가')} 실제 행동으로 나타나는지를 보라고 합니다.`].filter(Boolean).join(' ');
 }
 export function matchingMessage(id:number,q:Scenario,ko:boolean,original:string){if(q.situation==='breakup')return original;if(id===9)return ko?'설렘을 느끼면서도 내 속도를 지킬 수 있어요.':'You can feel the spark and still honor your own pace.';if(id===19)return ko?'상대의 선택을 존중하면서 나의 바람도 소중히 여겨 주세요.':'Respect their choice without dismissing your own hopes.';return original}
 export function spreadConnection(ds:Draw[],q:Scenario,ko:boolean){
  if(ds.length<3)return '';
- const [a,b,c]=ds;const tones=ds.map(effectiveTone);const progression=tones[2]>tones[0]?(ko?'처음보다 마지막 카드의 흐름이 나아져서, 중간의 문제를 넘기면 관계가 움직일 여지가 커집니다.':'The final card improves on the opening card, so the obstacle in the middle is not necessarily the endpoint.'):tones[2]<tones[0]?(ko?'처음보다 마지막 카드가 더 무거워져요. 초반의 좋은 신호만 믿고 밀기보다 뒤에서 드러난 조건을 먼저 해결해야 합니다.':'The final card is heavier than the opening, so the later condition matters more than the initial promise.'):(ko?'처음과 마지막의 힘이 비슷해서 한 번의 계기보다 반복되는 행동이 결론을 좌우합니다.':'The opening and ending are balanced; repeated behavior matters more than one moment.');
- if(ko)return `${q.positions[0]}에서는 ${a.card.name}의 ‘${a.card.keyword}’, ${q.positions[1]}에서는 ${b.card.name}의 ‘${b.card.keyword}’, ${q.positions[2]}에서는 ${c.card.name}의 ‘${c.card.keyword}’가 이어집니다. ${progression}`;
+ const [a,b,c]=ds;const tones=ds.map(effectiveTone);const s=spreadSignal(ds);const progression=tones[2]>tones[0]?(ko?(s.score<=-2?'마지막 카드는 처음보다 가볍지만 전체 흐름은 아직 무거워요. 중간의 걸림돌이 실제로 풀리는지부터 확인해야 합니다.':'처음보다 마지막 카드의 흐름이 나아져서, 중간의 문제를 넘기면 관계가 움직일 여지가 커집니다.'):(s.score<=-2?'The final card is lighter than the opening, but the spread as a whole is still heavy; check whether the middle obstacle actually eases.':'The final card improves on the opening card, so the obstacle in the middle is not necessarily the endpoint.')):tones[2]<tones[0]?(ko?(s.score>=2?'전체 흐름은 좋은 편이지만 마지막 카드가 처음보다 무거워요. 초반의 좋은 신호만 믿기보다 뒤에서 드러난 조건을 먼저 챙기세요.':'처음보다 마지막 카드가 더 무거워져요. 초반의 좋은 신호만 믿고 밀기보다 뒤에서 드러난 조건을 먼저 해결해야 합니다.'):'The final card is heavier than the opening, so the later condition matters more than the initial promise.'):(ko?'처음과 마지막의 힘이 비슷해서 한 번의 계기보다 반복되는 행동이 결론을 좌우합니다.':'The opening and ending are balanced; repeated behavior matters more than one moment.');
+ if(ko)return `${q.positions[0]}에서는 ${a.card.name}의 ‘${a.card.keyword}’, ${q.positions[1]}에서는 ${b.card.name}의 ‘${b.card.keyword}’, ${q.positions[2]}에서는 ${c.card.name}의 ‘${c.card.keyword}’${josa(c.card.keyword,'이','가')} 이어집니다. ${progression}`;
  return `${a.card.name} opens the spread, ${b.card.name} changes the pressure in the middle, and ${c.card.name} sets the direction. ${progression}`;
 }
