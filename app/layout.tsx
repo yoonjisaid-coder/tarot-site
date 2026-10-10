@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Untold — Free Love Tarot Reading",
   description: "Pick your own cards for love, feelings, contact and reconciliation. A full tarot deck, a clarity card and a message for you. Free, with no sign-up.",
   other: {
