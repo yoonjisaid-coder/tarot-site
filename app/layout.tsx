@@ -4,7 +4,6 @@ import { SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  verification: { google: "Gtf91rD5nijq9ifro96a9QrGUzet8cTvL87nmRwIXFs" },
   title: "Untold — Free Love Tarot Reading",
   description: "Pick your own cards for love, feelings, contact and reconciliation. A full tarot deck, a clarity card and a message for you. Free, with no sign-up.",
   other: {
@@ -23,6 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head><meta name="google-site-verification" content="Gtf91rD5nijq9ifro96a9QrGUzet8cTvL87nmRwIXFs" /></head>
       <body className="antialiased">{children}</body>
     </html>
   );
