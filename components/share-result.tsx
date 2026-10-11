@@ -2,6 +2,7 @@
 import {useState} from 'react';
 import {Share2} from 'lucide-react';
 import {Button} from '@/components/ui/button';
+// One CTA: native share sheet where supported, otherwise copy the same result URL.
 export default function ShareResult({ko,title,getUrl}:{ko:boolean;title:string;getUrl:()=>string}) {
  const [status,setStatus]=useState('');const [manual,setManual]=useState('');
  async function share(){

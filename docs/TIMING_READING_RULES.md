@@ -36,3 +36,30 @@ Reproduce rules test:
 node node_modules/typescript/bin/tsc lib/timing.ts lib/reading-scenarios.ts lib/shared-result.ts --outDir /tmp/untold-rule-check --module commonjs --moduleResolution node --target ES2022 --skipLibCheck
 node scripts/check-timing.cjs /tmp/untold-rule-check
 ```
+
+## Update 2026-10-08 (interpretation R3)
+
+**This is UNTOLD's own editorial timing system. It is not a traditional tarot rule and is not presented to users as one.** Tarot traditions disagree on timing correspondences; these bands exist so readings answer "언제쯤" consistently, not to predict dates.
+
+What the result shows: one most-likely window plus a confidence label (높음 / 보통 / 낮음) and the card-based reason. Early/late edges are no longer shown by default, because summing them (e.g. 1주~2개월) carried little information.
+
+Windows per question type (`UNITS` in `lib/reading-engine.ts`):
+
+| Type | Fast → slow bands |
+|---|---|
+| 연락 (contact) | 며칠~1주 · 1~2주 · 2~4주 · 1~2개월 · 2~3개월 이상 |
+| 재회 (reunion talk reopening) | 2~4주 · 1~2개월 · 2~3개월 · 3~6개월 · 반년 이상 |
+| 관계 진전 (progress) | 1~2주 · 2~4주 · 1~2개월 · 2~3개월 · 3개월 이상 |
+| 새 인연 (new love) | 1~2개월 · 2~3개월 · 3~4개월 · 4~6개월 · 반년 이후 |
+
+Three-card readings (`timingFor` in `lib/reading-engine.ts`):
+
+- Each non-obstacle card gets a pace from its reading class (from `lib/card-cores.ts`): action 0; clear judgment, warmth, turning point 1; memory, stable base, recovery 2; pause, attachment, conflict, unmet expectation 3. Unclear (FOG) and ending (END) cards carry no pace.
+- Suit/element: Wands one step faster, Pentacles one step slower; Cups and Swords unchanged. Major arcana use their class only.
+- Orientation: reversed is one step slower.
+- Spread: the center is the rounded mean of the paced cards; a heavy obstacle card adds one step. Confidence is 높음 when the paced cards are within one step, 보통 within two, otherwise 낮음.
+- No window is given when the verdict is low (the obstacle must ease first), unclear, or when an ending card is a main signal.
+
+Single-card timing questions keep the band logic above (`lib/timing.ts`, 624-case gate unchanged) and now print the most-likely window with confidence: 보통 by default, 낮음 for reversed or court cards, 높음 only for the upright Eight of Wands.
+
+Dates are never generated.

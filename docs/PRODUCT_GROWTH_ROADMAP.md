@@ -213,19 +213,19 @@ A deeper multi-card reading may add: current pace → delay/acceleration factor 
 
 Timing copy must never say that a contact, reunion or relationship **will** occur on a guaranteed date. If the spread does not support the event itself, do not manufacture a date; state that timing is not meaningfully readable until the event possibility is established in that reading.
 
-## Full-deck visibility UX (R0 change)
+## Full-deck selection UX (R0 confirmed direction)
 
-The current narrow-screen rotating semicircular fan hides much of the 78-card deck at once. Keep the core interaction — shuffle → see the face-down deck → personally choose cards — but change the presentation so users can visually understand the whole deck without horizontal/rotational exploration as the default.
+Latest confirmed product direction: preserve the semicircular full-deck presentation as the tarot selection identity. Do not replace it with a flat “hwatu-board” style grid merely for implementation convenience.
 
 Requirements:
-- Desktop: all 78 face-down cards visible within the deck-selection area at once; no horizontal scrolling or arrow rotation required. Test a compact grid/table layout (13×6 is a natural starting point) and retain clear hover/focus/selected feedback.
-- Mobile: show the whole 78-card field as the default composition rather than hiding cards offscreen horizontally. Card hit targets, accidental taps and legibility must be tested on real/narrow devices; use responsive spacing/scale and selection feedback rather than returning to a hidden horizontal carousel.
-- Preserve shuffle, unique selection, selection order, keyboard operation and reduced-motion/accessibility behavior.
-- Do not shrink cards so far that selection becomes unreliable. Browser/device QC decides the final responsive dimensions.
-- The 12-card Clarity and 30-card Message decks should follow the same “whole deck is understandable at a glance” principle where practical.
+- The user must still understand that the full 78-card deck is available.
+- Desktop and mobile must both make the semicircular deck practically explorable and selectable, with clear selection order and feedback.
+- Mobile may use responsive scaling, controlled horizontal/rotational exploration or other interaction needed to keep cards tappable, but must not make most of the deck effectively undiscoverable.
+- Preserve shuffle, unique selection, selection order, keyboard/reduced-motion behavior where applicable.
+- Test actual narrow mobile devices and desktop browsers before R0 is declared complete.
+- The 12-card Clarity and 30-card Message decks should remain visually coherent with the same product language where practical.
 
-This is an R0 UX correction and takes precedence over preserving the existing rotating-fan presentation itself; the confirmed product interaction is manual card choice, not the fan geometry.
-
+The confirmed product interaction is manual card choice from the full deck, and the confirmed visual direction is semicircular rather than a flat grid.
 
 ## 00.CONTROL TOWER 연동 운영 원칙
 
