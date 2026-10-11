@@ -22,7 +22,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head><meta name="google-site-verification" content="Gtf91rD5nijq9ifro96a9QrGUzet8cTvL87nmRwIXFs" /></head>
+      <head>
+        <meta name="google-site-verification" content="Gtf91rD5nijq9ifro96a9QrGUzet8cTvL87nmRwIXFs" />
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7433763910312612" crossOrigin="anonymous" />
+      </head>
       <body className="antialiased">{children}</body>
     </html>
   );
