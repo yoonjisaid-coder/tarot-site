@@ -1,8 +1,8 @@
 import type {Metadata} from 'next';
 
 // Public origin used for canonical, hreflang, sitemap and social-preview URLs.
-// This is the ChatGPT Sites production URL; change it here if a custom domain is attached.
-export const SITE_URL='https://heart-between-tarot.yoonji-said.chatgpt.site';
+// Use the custom domain even when a page is requested through the Sites hostname.
+export const SITE_URL='https://tarot.realizemylife.com';
 export const SITE_NAME='Untold';
 
 // English is served without a query (the app's default); Korean uses ?lang=ko, as the language switch does.
